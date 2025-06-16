@@ -253,18 +253,18 @@ Sidebar.displayName = "Sidebar"
 const SidebarTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<typeof Button>
->(({ className, children, ...props }, ref) => {
+>(({ children, ...props }, ref) => {
   const { toggleSidebar } = useSidebar();
 
   if (props.asChild && React.isValidElement(children)) {
     const childElement = React.Children.only(children) as React.ReactElement<any>;
     return React.cloneElement(childElement, {
-      ref, // Pass ref to the child
-      ...props, // Spread props to the child
+      ref,
+      ...props, // Spread props like variant, size
       ...childElement.props, // Spread original child props
-      className: cn(childElement.props.className, className), // Merge classNames
+      className: cn(props.className, childElement.props.className), // Merge classNames carefully
       onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
-        childElement.props.onClick?.(event); // Call original onClick if it exists
+        childElement.props.onClick?.(event);
         if (!event.defaultPrevented) {
           toggleSidebar();
         }
@@ -275,13 +275,10 @@ const SidebarTrigger = React.forwardRef<
   return (
     <Button
       ref={ref}
+      {...props} // Spread props like variant, size, className
       data-sidebar="trigger"
-      variant="ghost"
-      size="icon"
-      className={cn("h-7 w-7", className)}
-      {...props} // Spread props here
       onClick={(event) => {
-        props.onClick?.(event); // Call original onClick if it exists
+        props.onClick?.(event);
         if (!event.defaultPrevented) {
           toggleSidebar();
         }
@@ -542,79 +539,76 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-// Define specific props SidebarMenuButton uses, plus common HTML attributes
-// It will also receive other props from Link like onClick, which fall into ...rest.
 interface SidebarMenuButtonProps
-  extends VariantProps<typeof sidebarMenuButtonVariants> {
+  extends React.HTMLAttributes<HTMLElement>, // Use HTMLAttributes for broader compatibility
+    VariantProps<typeof sidebarMenuButtonVariants> {
   children: React.ReactNode;
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-  href?: string; // Important: Link will pass this
-  asChild?: boolean; // Important: Link will pass this as true
-  className?: string;
-  style?: React.CSSProperties;
-  // Catch other props that Link might pass, or general HTML attributes
-  [key: string]: any;
+  href?: string; // Will be passed by Link if used as child of Link
+  asChild?: boolean; // SidebarMenuButton's own asChild prop, not Link's
 }
 
 
 const SidebarMenuButton = React.forwardRef<HTMLElement, SidebarMenuButtonProps>(
-  (
-    {
-      className,
-      children: btnChildren, // Renamed to avoid conflict if 'children' is in rest
+  (rawProps, ref) => {
+    const {
+      className: rawClassName,
+      children: btnChildren,
       isActive = false,
       tooltip,
       variant = "default",
       size = "default",
-      href: propHref, // Explicitly capture href
-      asChild: propAsChild, // Explicitly capture asChild from Link (will be true)
-      ...restProps // All other props (e.g., onClick from Link, style, target, rel)
-    },
-    ref
-  ) => {
+      href: propHref,   // Comes from Link (or direct prop)
+      asChild: sbmOwnAsChild, // This is SidebarMenuButton's own asChild prop
+      ...otherRawProps // Contains onClick from Link, target, rel, etc.
+    } = rawProps;
+
     const { isMobile, state } = useSidebar();
+    
+    // Determine the component to render.
+    // If SidebarMenuButton's own asChild is true, it becomes a Slot.
+    // Otherwise, if href is present (from Link), it's an 'a'.
+    // Otherwise, it's a 'button'.
+    const Comp = sbmOwnAsChild ? Slot : propHref ? "a" : "button";
 
-    // If propHref is present (from Link), this component should render an 'a' tag.
-    // Otherwise, it's a regular button.
-    const Comp = propHref ? 'a' : 'button';
+    // Prepare props for the DOM element or Slot
+    // Start with props that Link might pass (like onClick, target, rel)
+    const elementProps: Record<string, any> = { ...otherRawProps };
 
-    // Props for the actual DOM element (<a> or <button>)
-    // Crucially, propAsChild (which is true from Link) is NOT spread here.
-    const elementProps: React.AllHTMLAttributes<HTMLElement> & Record<string, any> = {
-      ...restProps, // Spread other props like onClick, target, rel, style
-      ref,
-      className: cn(sidebarMenuButtonVariants({ variant, size, className })),
-      'data-sidebar': 'menu-button',
-      'data-size': size,
-      'data-active': isActive,
-    };
+    // Add standard HTML attributes and data attributes
+    elementProps.ref = ref;
+    elementProps.className = cn(sidebarMenuButtonVariants({ variant, size, className: rawClassName }));
+    elementProps['data-sidebar'] = 'menu-button';
+    elementProps['data-size'] = size;
+    elementProps['data-active'] = isActive;
 
-    if (Comp === 'a') {
-      // href is already in elementProps if passed via propHref and ...restProps
-      // but Link passes href directly, so ensure it's set.
+    // Add href or type based on the component type
+    if (Comp === "a") {
       elementProps.href = propHref;
-    } else if (Comp === 'button' && !elementProps.type) {
-      // Default type for button if not specified in restProps
-      elementProps.type = 'button';
+    } else if (Comp === "button" && !elementProps.type) {
+      elementProps.type = "button";
+    }
+
+    // Explicitly delete 'asChild' from the props to be spread onto the DOM element
+    // This is the crucial step to prevent the warning if `otherRawProps` somehow contained it.
+    // sbmOwnAsChild was already destructured, so this targets any other rogue `asChild`.
+    if (elementProps.hasOwnProperty('asChild')) {
+      delete elementProps.asChild;
     }
     
-    // The actual interactive element (<a> or <button>)
-    // This element should NOT receive the 'asChild' prop from Link.
-    const interactiveElement = (
-      // @ts-ignore
-      <Comp {...elementProps}>
-        <span style={{ display: "contents" }}>{btnChildren}</span>
-      </Comp>
+    const interactiveElement = React.createElement(
+      Comp,
+      elementProps as React.HTMLAttributes<HTMLElement>,
+      // If Comp is Slot (sbmOwnAsChild is true), btnChildren are passed directly.
+      // If Comp is 'a' or 'button', wrap btnChildren for styling.
+      Comp === Slot ? btnChildren : <span style={{ display: "contents" }}>{btnChildren}</span>
     );
 
     if (!tooltip) {
       return interactiveElement;
     }
 
-    // TooltipTrigger itself uses asChild, so it will clone interactiveElement
-    // and pass its own behavioral props to it. This is fine.
-    // The key is that interactiveElement itself doesn't have the problematic asChild.
     return (
       <Tooltip>
         <TooltipTrigger asChild>
