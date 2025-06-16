@@ -20,7 +20,7 @@ import {
   Percent,
   Calculator,
   FileText,
-  UserCircle,
+  Landmark, // Added for Accounts
   Menu,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,6 +32,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/products', label: 'Products', icon: Package },
   { href: '/tax-rates', label: 'Tax Rates', icon: Percent },
+  { href: '/accounts', label: 'Accounts', icon: Landmark }, // Added Accounts
   { href: '/income-tax-estimator', label: 'Income Tax Estimator', icon: Calculator },
   { href: '/reports', label: 'Reports', icon: FileText },
 ];

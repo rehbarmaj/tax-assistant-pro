@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   code: string;
@@ -28,4 +29,24 @@ export interface EstimatedTaxResult {
   estimatedTax: string;
   isAccurate: boolean;
   additionalDataNeeded?: string;
+}
+
+// For Accounts Module
+export type AccountType =
+  | 'Bank'
+  | 'Cash'
+  | 'Credit Card'
+  | 'Loan'
+  | 'Equity'
+  | 'Asset'
+  | 'Liability';
+
+export interface Account {
+  id: string;
+  name: string;
+  type: AccountType;
+  accountNumber?: string;
+  bankName?: string;
+  balance: number;
+  currency: string; // e.g., 'USD'
 }
