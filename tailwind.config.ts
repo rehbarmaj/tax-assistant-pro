@@ -8,11 +8,20 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: { // Added for consistent container usage
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '2rem',
+        lg: '4rem',
+        xl: '5rem',
+      },
+    },
     extend: {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
-        code: ['monospace'],
+        code: ['monospace', 'Menlo', 'Courier New'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -88,12 +97,19 @@ export default {
             height: '0',
           },
         },
+        // Added for subtle animations
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-in': 'fade-in 0.5s ease-out', // Added for subtle animations
       },
     },
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
+
