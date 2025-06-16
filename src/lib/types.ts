@@ -50,3 +50,28 @@ export interface Account {
   balance: number;
   currency: string; // e.g., 'USD'
 }
+
+// For Voucher Modules
+export type VoucherMode = 'Cash' | 'Bank Transfer' | 'Cheque' | 'UPI' | 'Card' | 'Other';
+
+export interface PaymentVoucher {
+  id: string;
+  voucherNumber: string;
+  date: Date;
+  partyName: string;
+  amount: number;
+  paymentMode: VoucherMode;
+  narration?: string;
+  currency: string;
+}
+
+export interface ReceiptVoucher {
+  id: string;
+  voucherNumber: string;
+  date: Date;
+  partyName: string;
+  amount: number;
+  receiptMode: VoucherMode;
+  narration?: string;
+  currency: string;
+}

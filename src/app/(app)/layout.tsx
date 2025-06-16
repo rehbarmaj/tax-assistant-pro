@@ -20,8 +20,10 @@ import {
   Percent,
   Calculator,
   FileText,
-  Landmark, // Added for Accounts
+  Landmark,
   Menu,
+  ArrowBigUpDash,
+  ArrowBigDownDash,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,7 +34,9 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/products', label: 'Products', icon: Package },
   { href: '/tax-rates', label: 'Tax Rates', icon: Percent },
-  { href: '/accounts', label: 'Accounts', icon: Landmark }, // Added Accounts
+  { href: '/accounts', label: 'Accounts', icon: Landmark },
+  { href: '/payment-vouchers', label: 'Payment Vouchers', icon: ArrowBigUpDash },
+  { href: '/receipt-vouchers', label: 'Receipt Vouchers', icon: ArrowBigDownDash },
   { href: '/income-tax-estimator', label: 'Income Tax Estimator', icon: Calculator },
   { href: '/reports', label: 'Reports', icon: FileText },
 ];
