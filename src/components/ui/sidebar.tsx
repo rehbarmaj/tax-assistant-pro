@@ -595,22 +595,28 @@ const SidebarMenuButton = React.forwardRef<
   variant,
   size,
   href,
-  onClick: propOnClick, // Renamed to avoid conflict if Link also passes onClick
+  onClick: propOnClick,
   target,
   rel,
   type,
-  asChild: _forwardedAsChild, // Explicitly capture asChild to prevent it from going into remainingDomProps
-  ...remainingDomProps // These are other props passed, e.g. by Link
+  asChild: _thisComponentsAsChildProp, // Captures if SidebarMenuButton itself was called with asChild
+  ...restOfAllProps // Contains props from Link AND any other direct props not listed above
 }, ref) => {
   const { isMobile, state } = useSidebar();
   const isLink = typeof href === 'string';
   const Comp = isLink ? "a" : "button";
 
-  // onClick from Link for navigation, or propOnClick if it's a button or Link didn't pass one
-  const handleClick = isLink ? remainingDomProps.onClick || propOnClick : propOnClick;
+  // Separate asChild from the restOfAllProps that Link might have passed
+  // (or any other source that might have put it in restOfAllProps)
+  const { asChild: _linkOrRestAsChild, ...safeRestProps } = restOfAllProps;
+
+  // Determine the correct onClick handler
+  // If it's a link, Link component might pass its own onClick for navigation.
+  // Otherwise, use the propOnClick if provided.
+  const handleClick = isLink ? safeRestProps.onClick || propOnClick : propOnClick;
 
   const elementProps: Record<string, any> = {
-    ...remainingDomProps, // Spread other props (like those from Link, except onClick if handled)
+    ...safeRestProps, // Spread the version guaranteed to not have asChild
     ref: ref,
     className: cn(sidebarMenuButtonVariants({ variant, size, className: sbmClassName })),
     'data-sidebar': 'menu-button',
@@ -626,24 +632,15 @@ const SidebarMenuButton = React.forwardRef<
     elementProps.type = type || 'button';
   }
 
-  // Ensure the correct onClick is applied
+  // Apply the determined onClick handler
   if (handleClick) {
     elementProps.onClick = handleClick;
-  } else if (isLink && remainingDomProps.onClick) { 
-    // If it's a link and remainingDomProps had onClick (from Link), ensure it's used
-    // This case might be redundant if handleClick already covers it.
-    elementProps.onClick = remainingDomProps.onClick;
-  } else if (!isLink && propOnClick) {
-    // If it's a button and propOnClick was given
-    elementProps.onClick = propOnClick;
   }
-
-
-  // CRITICAL FIX: Explicitly delete `asChild` from the elementProps before rendering.
-  // This ensures that even if `asChild` was passed down by `Link` (in remainingDomProps)
-  // or was part of `_forwardedAsChild` (which is already destructured out),
-  // it does not end up on the actual DOM element.
-  delete (elementProps as { asChild?: any }).asChild;
+  
+  // Explicitly delete `asChild` from the final elementProps as a robust safeguard.
+  // This ensures that even if `asChild` was part of `safeRestProps` due to some complex scenario
+  // (which it shouldn't be after the destructuring above), it's removed.
+  delete (elementProps as { asChild?: any }).asChild; 
 
   const interactiveElement = <Comp {...elementProps}>{sbmChildren}</Comp>;
 
@@ -836,3 +833,6 @@ export {
   useSidebar,
 }
 
+
+
+    
