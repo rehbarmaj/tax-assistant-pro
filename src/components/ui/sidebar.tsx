@@ -264,13 +264,13 @@ const SidebarTrigger = React.forwardRef<
   if (asChild && React.isValidElement(children)) {
     const childElement = React.Children.only(children) as React.ReactElement<any>;
     return React.cloneElement(childElement, {
-      ...props, // Spread other props like variant, size from SidebarTrigger's usage
-      ...childElement.props, // Keep original props of the child from layout
-      ref, // Ensure ref is passed to the cloned child element
-      className: cn(childElement.props.className, className), // Merge classNames
+      ...props, 
+      ...childElement.props, 
+      ref, 
+      className: cn(childElement.props.className, className), 
       onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
-        childElement.props.onClick?.(event); // Call original onClick if any
-        handleClick(event); // Call SidebarTrigger's onClick
+        childElement.props.onClick?.(event); 
+        handleClick(event); 
       },
     });
   }
@@ -283,7 +283,7 @@ const SidebarTrigger = React.forwardRef<
       size="icon"
       className={cn("h-7 w-7", className)}
       onClick={handleClick}
-      {...props} // Other props (NOT asChild or children)
+      {...props} 
     >
       <PanelLeft />
       <span className="sr-only">Toggle Sidebar</span>
@@ -540,58 +540,53 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-const SidebarMenuButton = React.forwardRef<
-  HTMLElement,
-  React.ComponentProps<"button"> & Partial<React.ComponentProps<"a">> & {
-    asChild?: boolean; // This is SidebarMenuButton's OWN asChild prop
-    isActive?: boolean;
-    tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-  } & VariantProps<typeof sidebarMenuButtonVariants>
->(
+interface SidebarMenuButtonProps
+  extends Omit<React.HTMLAttributes<HTMLElement>, "asChild" | "href">,
+    VariantProps<typeof sidebarMenuButtonVariants> {
+  children: React.ReactNode;
+  isActive?: boolean;
+  tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+  href?: string; 
+  asChild?: boolean; // To capture and consume asChild from Link or other parents
+  [key: string]: any; // Allow other props like onClick from Link
+}
+
+const SidebarMenuButton = React.forwardRef<HTMLElement, SidebarMenuButtonProps>(
   (
     {
-      asChild: sidebarButtonOwnAsChild = false,
-      isActive = false,
-      variant = "default",
-      size = "default",
-      tooltip,
       className,
       children,
-      ...allOtherProps // Contains props from Link (like href, onClick, AND Link's asChild)
-                      // OR props directly passed if Link is not the parent.
+      isActive = false,
+      tooltip,
+      variant = "default",
+      size = "default",
+      href,
+      asChild: parentAsChild, // Capture Link's asChild, ensure it's not in domElementProps
+      ...domElementProps // Remaining props (e.g., onClick from Link, etc.)
     },
     ref
   ) => {
     const { isMobile, state } = useSidebar();
-    
-    // Destructure `asChild` from `allOtherProps` to prevent it from being spread to the DOM element
-    // This `asChildFromParent` is the one passed by <Link asChild> if Link is the parent.
-    const { asChild: asChildFromParent, ...finalPropsToSpreadOnElement } = allOtherProps;
 
-    // Determine the component to render.
-    // If SidebarMenuButton's *own* asChild prop (sidebarButtonOwnAsChild) is true, use Slot.
-    // Otherwise, if it's being used under a Link (indicated by finalPropsToSpreadOnElement.href existing), render 'a'.
-    // Otherwise, render 'button'.
-    const Comp = sidebarButtonOwnAsChild 
-      ? Slot 
-      : (finalPropsToSpreadOnElement.href ? 'a' : 'button');
-    
-    const elementProps: any = {
+    const Comp = href ? 'a' : 'button';
+
+    const elementProps = {
+      ...domElementProps,
       ref,
       className: cn(sidebarMenuButtonVariants({ variant, size, className })),
       "data-sidebar": "menu-button",
       "data-size": size,
       "data-active": isActive,
-      ...finalPropsToSpreadOnElement, // Spread href, onClick from Link etc., but NOT Link's `asChild`
+      // Conditionally add href if Comp is 'a'
+      ...(Comp === 'a' && href && { href }),
+      // Default type for button if not specified in domElementProps
+      ...(Comp === 'button' && !domElementProps.type && { type: 'button' }),
     };
-    
-    // If Comp is 'button' and doesn't have a type, default it to 'button' for accessibility
-    if (Comp === 'button' && typeof elementProps.type === 'undefined') {
-      elementProps.type = 'button';
-    }
 
     const interactiveElement = (
+      // @ts-ignore Comp can be 'a' or 'button', TS might be picky
       <Comp {...elementProps}>
+        {/* Wrap children in a span that doesn't affect layout for TooltipTrigger's single child requirement */}
         <span style={{ display: "contents" }}>{children}</span>
       </Comp>
     );
@@ -785,3 +780,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
