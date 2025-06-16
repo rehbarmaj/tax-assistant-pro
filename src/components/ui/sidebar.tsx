@@ -8,7 +8,7 @@ import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Button, type ButtonProps as ShadcnButtonProps } from "@/components/ui/button" 
+import { Button, type ButtonProps as ShadcnButtonProps } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -607,16 +607,12 @@ const SidebarMenuButton = React.forwardRef<
   const Comp = isLink ? "a" : "button";
 
   // Separate asChild from the restOfAllProps that Link might have passed
-  // (or any other source that might have put it in restOfAllProps)
   const { asChild: _linkOrRestAsChild, ...safeRestProps } = restOfAllProps;
 
-  // Determine the correct onClick handler
-  // If it's a link, Link component might pass its own onClick for navigation.
-  // Otherwise, use the propOnClick if provided.
   const handleClick = isLink ? safeRestProps.onClick || propOnClick : propOnClick;
 
   const elementProps: Record<string, any> = {
-    ...safeRestProps, // Spread the version guaranteed to not have asChild
+    ...safeRestProps, // Spread the version guaranteed to not have asChild from ...restOfAllProps
     ref: ref,
     className: cn(sidebarMenuButtonVariants({ variant, size, className: sbmClassName })),
     'data-sidebar': 'menu-button',
@@ -632,14 +628,14 @@ const SidebarMenuButton = React.forwardRef<
     elementProps.type = type || 'button';
   }
 
-  // Apply the determined onClick handler
   if (handleClick) {
     elementProps.onClick = handleClick;
   }
   
-  // Explicitly delete `asChild` from the final elementProps as a robust safeguard.
-  // This ensures that even if `asChild` was part of `safeRestProps` due to some complex scenario
-  // (which it shouldn't be after the destructuring above), it's removed.
+  // _thisComponentsAsChildProp is captured if SidebarMenuButton was directly called with asChild.
+  // _linkOrRestAsChild is captured if Link (or other spread source) passed asChild.
+  // Neither of these are included in elementProps at this point due to destructuring.
+  // This final delete is an explicit safeguard.
   delete (elementProps as { asChild?: any }).asChild; 
 
   const interactiveElement = <Comp {...elementProps}>{sbmChildren}</Comp>;
@@ -832,7 +828,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-
-
-    
