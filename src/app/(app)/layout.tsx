@@ -1,4 +1,5 @@
 
+
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import {
@@ -24,6 +25,7 @@ import {
   Menu,
   ArrowBigUpDash,
   ArrowBigDownDash,
+  BookCopy, // Added for Journal Vouchers
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,6 +39,7 @@ const navItems = [
   { href: '/accounts', label: 'Accounts', icon: Landmark },
   { href: '/payment-vouchers', label: 'Payment Vouchers', icon: ArrowBigUpDash },
   { href: '/receipt-vouchers', label: 'Receipt Vouchers', icon: ArrowBigDownDash },
+  { href: '/journal-vouchers', label: 'Journal Vouchers', icon: BookCopy }, // Added Journal Vouchers
   { href: '/income-tax-estimator', label: 'Income Tax Estimator', icon: Calculator },
   { href: '/reports', label: 'Reports', icon: FileText },
 ];
@@ -110,3 +113,4 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
+

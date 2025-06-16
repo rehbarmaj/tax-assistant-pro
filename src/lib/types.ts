@@ -1,4 +1,5 @@
 
+
 export interface Product {
   id: string;
   code: string;
@@ -75,3 +76,22 @@ export interface ReceiptVoucher {
   narration?: string;
   currency: string;
 }
+
+// For Journal Voucher Module
+export interface JournalEntry {
+  id: string; // Unique ID for the entry line
+  accountName: string; // For display, simple text input for now. Could be linked to Account['id'] later.
+  debit: number;
+  credit: number;
+  narration?: string; // Narration specific to this line item
+}
+
+export interface JournalVoucher {
+  id: string;
+  voucherNumber: string;
+  date: Date;
+  narration?: string; // Overall narration for the voucher
+  entries: JournalEntry[];
+  currency: string; // e.g., 'USD'
+}
+
