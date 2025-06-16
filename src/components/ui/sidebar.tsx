@@ -8,7 +8,7 @@ import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Button, type ButtonProps as ShadcnButtonProps } from "@/components/ui/button" // Renamed to avoid conflict
+import { Button, type ButtonProps as ShadcnButtonProps } from "@/components/ui/button" 
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -250,7 +250,7 @@ const Sidebar = React.forwardRef<
 )
 Sidebar.displayName = "Sidebar"
 
-interface SidebarTriggerProps extends ShadcnButtonProps {} // Use the imported ButtonProps
+interface SidebarTriggerProps extends ShadcnButtonProps {}
 
 const SidebarTrigger = React.forwardRef<HTMLButtonElement, SidebarTriggerProps>(
   ({ children, onClick: parentOnClick, asChild: triggerAsChildProp, variant, size, className, ...restButtonProps }, ref) => {
@@ -265,31 +265,27 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, SidebarTriggerProps>(
 
     if (triggerAsChildProp && React.isValidElement(children)) {
       const childElement = React.Children.only(children) as React.ReactElement<
-        React.ButtonHTMLAttributes<HTMLButtonElement> & { ref?: React.Ref<HTMLButtonElement>; asChild?: boolean }
+        React.ButtonHTMLAttributes<HTMLButtonElement> & { ref?: React.Ref<HTMLButtonElement>; }
       >;
       
-      const childProps = { ...childElement.props };
-      
-      // Destructure asChild from restButtonProps to avoid passing it down if it came from SidebarTrigger's own props
-      const { asChild: _sidebarTriggerOwnAsChild, ...safeRest } = restButtonProps; 
+      const { asChild: _childOwnAsChild, ...childPropsWithoutAsChild } = childElement.props as any;
+      const { asChild: _sidebarTriggerOwnAsChild, ...safeRest } = restButtonProps;
 
       const clonedProps = {
-        ...childProps,
+        ...childPropsWithoutAsChild,
         ...safeRest,
-        ref, 
+        ref,
         onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
-          childProps.onClick?.(e);
-          if (!e.isDefaultPrevented()) { // Check if child's onClick prevented default
+          (childElement.props as any).onClick?.(e);
+          if (!e.isDefaultPrevented()) {
             handleClick(e);
           }
         },
-        className: cn(childProps.className, className),
+        className: cn(childElement.props.className, className),
       };
       return React.cloneElement(childElement, clonedProps);
     }
 
-    // If not asChild, render the default Button
-    // Ensure SidebarTrigger's own asChild prop is not passed to this Button
     const { asChild: _sidebarTriggerOwnAsChild, ...buttonOnlyProps } = restButtonProps;
 
     return (
@@ -300,7 +296,7 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, SidebarTriggerProps>(
         variant={variant}
         size={size}
         className={className}
-        {...buttonOnlyProps} // Spread props intended for the Button, excluding asChild
+        {...buttonOnlyProps}
       >
         {children || <PanelLeft />}
         {(!children || triggerAsChildProp === true ) && <span className="sr-only">Toggle Sidebar</span>}
@@ -558,55 +554,47 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-interface SidebarMenuButtonBaseProps
-  extends VariantProps<typeof sidebarMenuButtonVariants> {
+interface SidebarMenuButtonSpecificProps {
   children: React.ReactNode;
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
   className?: string;
 }
 
-interface SidebarMenuButtonLinkProps
-  extends SidebarMenuButtonBaseProps,
-    Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "type" | "children" | "className"> {
-  href: string;
-}
-
-interface SidebarMenuButtonButtonProps
-  extends SidebarMenuButtonBaseProps,
-    Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children" | "className"> {
-  href?: undefined;
-}
-
-type ResolvedSidebarMenuButtonProps =
-  | SidebarMenuButtonLinkProps
-  | SidebarMenuButtonButtonProps;
+type ResolvedSidebarMenuButtonProps = SidebarMenuButtonSpecificProps &
+  VariantProps<typeof sidebarMenuButtonVariants> &
+  (
+    | ({ href: string } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'children' | 'className' | 'style'>)
+    | Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'className' | 'style'>
+  );
 
 const SidebarMenuButton = React.forwardRef<
   HTMLAnchorElement | HTMLButtonElement,
   ResolvedSidebarMenuButtonProps
->(({
-  children: sbmChildren,
-  isActive = false,
-  tooltip,
-  variant,
-  size,
-  className: sbmClassName,
-  ...remainingProps // Contains href from Link, or type from Button, etc.
-                    // May also contain `asChild` if forwarded by parent `Link asChild`
-}, ref) => {
+>((props, ref) => {
+  const {
+    children: sbmChildren,
+    isActive = false,
+    tooltip,
+    className: sbmClassName,
+    variant,
+    size,
+    href, // Explicitly destructure href
+    onClick, // Explicitly destructure onClick
+    target, // Explicitly destructure target
+    rel, // Explicitly destructure rel
+    type, // Explicitly destructure type (for button)
+    asChild: receivedAsChild, // Explicitly destructure asChild
+    ...otherDomAttributes // Collect all other props
+  } = props;
+
   const { isMobile, state } = useSidebar();
 
-  const isLink = !!(remainingProps as SidebarMenuButtonLinkProps).href;
+  const isLink = typeof href === 'string';
   const Comp = isLink ? "a" : "button";
 
-  // Explicitly destructure and remove 'asChild' from remainingProps
-  // to prevent it from being spread to the DOM element.
-  const { asChild: _forwardedAsChild, ...domSafeRemainingProps } = remainingProps as any;
-
-
   const elementProps: Record<string, any> = {
-    ...domSafeRemainingProps, // Spread props like href, onClick, target, rel, type
+    ...otherDomAttributes, // Spread the collected other DOM attributes
     ref,
     className: cn(sidebarMenuButtonVariants({ variant, size, className: sbmClassName })),
     'data-sidebar': 'menu-button',
@@ -614,17 +602,23 @@ const SidebarMenuButton = React.forwardRef<
     'data-active': isActive,
   };
 
-  if (!isLink && !elementProps.type) {
-    elementProps.type = "button";
+  // Assign destructured props if they exist
+  if (onClick) {
+    elementProps.onClick = onClick;
   }
-  
-  const interactiveElement = (
-    <Comp {...elementProps}>
-      {/* Wrap children in a span with display: contents to ensure TooltipTrigger has a single valid child element
-          while maintaining the flex layout of the button itself. */}
-      <span style={{ display: "contents" }}>{sbmChildren}</span>
-    </Comp>
-  );
+
+  if (isLink) {
+    elementProps.href = href;
+    if (target) elementProps.target = target;
+    if (rel) elementProps.rel = rel;
+  } else {
+    elementProps.type = type || 'button'; // Default type for button
+  }
+
+  // `receivedAsChild` is destructured but NOT spread into `elementProps`,
+  // effectively preventing it from reaching the DOM element.
+
+  const interactiveElement = <Comp {...elementProps}>{sbmChildren}</Comp>;
 
   if (!tooltip) {
     return interactiveElement;
@@ -814,4 +808,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
