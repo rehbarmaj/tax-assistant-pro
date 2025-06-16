@@ -8,7 +8,7 @@ import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button, type ButtonProps } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -252,40 +252,47 @@ Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
   HTMLButtonElement,
-  React.ComponentProps<typeof Button>
->(({ children, ...props }, ref) => {
+  ButtonProps // Use ButtonProps directly which includes asChild
+>(({ children, onClick: parentOnClick, asChild: triggerAsChild, ...buttonProps }, ref) => {
   const { toggleSidebar } = useSidebar();
 
-  if (props.asChild && React.isValidElement(children)) {
-    const childElement = React.Children.only(children) as React.ReactElement<any>;
-    return React.cloneElement(childElement, {
-      ref,
-      ...props, // Spread props like variant, size
-      ...childElement.props, // Spread original child props
-      className: cn(props.className, childElement.props.className), // Merge classNames carefully
-      onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
-        childElement.props.onClick?.(event);
-        if (!event.defaultPrevented) {
-          toggleSidebar();
-        }
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    parentOnClick?.(event);
+    if (!event.defaultPrevented) {
+      toggleSidebar();
+    }
+  };
+
+  if (triggerAsChild && React.isValidElement(children)) {
+    const childElement = React.Children.only(children) as React.ReactElement<
+      React.ButtonHTMLAttributes<HTMLButtonElement> & { ref?: React.Ref<HTMLButtonElement> }
+    >;
+    
+    // Merge onClick handlers and ensure ref is passed
+    const clonedProps: React.ButtonHTMLAttributes<HTMLButtonElement> & { ref: React.Ref<HTMLButtonElement> } = {
+      ...childElement.props,
+      ref, // Pass the ref to the child
+      onClick: (e) => {
+        childElement.props.onClick?.(e);
+        handleClick(e);
       },
-    });
+    };
+    return React.cloneElement(childElement, clonedProps);
   }
+
+  // Default rendering: SidebarTrigger renders its own Button
+  // Remove asChild from buttonProps if it exists, as it's for the default Button here.
+  const { asChild, ...restButtonProps } = buttonProps;
 
   return (
     <Button
       ref={ref}
-      {...props} // Spread props like variant, size, className
       data-sidebar="trigger"
-      onClick={(event) => {
-        props.onClick?.(event);
-        if (!event.defaultPrevented) {
-          toggleSidebar();
-        }
-      }}
+      onClick={handleClick}
+      {...restButtonProps} // Spread variant, size, className etc. for the default Button
     >
       {children || <PanelLeft />}
-      <span className="sr-only">Toggle Sidebar</span>
+      {(!children || triggerAsChild === true ) && <span className="sr-only">Toggle Sidebar</span>}
     </Button>
   );
 });
@@ -539,70 +546,67 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
+// Removed 'asChild' from SidebarMenuButtonProps as it's not meant to be a Slot itself in this context
 interface SidebarMenuButtonProps
-  extends React.HTMLAttributes<HTMLElement>, // Use HTMLAttributes for broader compatibility
+  extends Omit<React.HTMLAttributes<HTMLElement>, 'onClick' | 'href'>, // Omit href as well, as it's handled specifically
     VariantProps<typeof sidebarMenuButtonVariants> {
-  children: React.ReactNode;
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-  href?: string; // Will be passed by Link if used as child of Link
-  asChild?: boolean; // SidebarMenuButton's own asChild prop, not Link's
+  href?: string; // Explicitly for Link parent
+  onClick?: React.MouseEventHandler<HTMLElement>; // To accept Link's onClick or direct onClick
 }
 
 
 const SidebarMenuButton = React.forwardRef<HTMLElement, SidebarMenuButtonProps>(
-  (rawProps, ref) => {
+  (props, ref) => {
     const {
-      className: rawClassName,
-      children: btnChildren,
+      className: sbmClassName,
+      children: sbmChildren,
       isActive = false,
       tooltip,
       variant = "default",
       size = "default",
-      href: propHref,   // Comes from Link (or direct prop)
-      asChild: sbmOwnAsChild, // This is SidebarMenuButton's own asChild prop
-      ...otherRawProps // Contains onClick from Link, target, rel, etc.
-    } = rawProps;
+      href, // Will be populated by Link when Link is asChild parent
+      onClick, // Will be populated by Link or passed directly
+      ...rest // other direct props or props from Link (like target, rel)
+    } = props;
 
     const { isMobile, state } = useSidebar();
     
-    // Determine the component to render.
-    // If SidebarMenuButton's own asChild is true, it becomes a Slot.
-    // Otherwise, if href is present (from Link), it's an 'a'.
-    // Otherwise, it's a 'button'.
-    const Comp = sbmOwnAsChild ? Slot : propHref ? "a" : "button";
+    // SidebarMenuButton always renders a concrete element ('a' or 'button')
+    // It does not act as a Slot itself via an 'asChild' prop.
+    const Comp = href ? "a" : "button";
 
-    // Prepare props for the DOM element or Slot
-    // Start with props that Link might pass (like onClick, target, rel)
-    const elementProps: Record<string, any> = { ...otherRawProps };
+    // Prepare props for the DOM element ('a' or 'button')
+    const domProps: React.HTMLAttributes<HTMLElement> & Record<string, any> = {
+      ...rest, // Spread other props first
+      ref,
+      onClick, // Apply onClick (from Link or direct)
+      className: cn(sidebarMenuButtonVariants({ variant, size, className: sbmClassName })),
+      'data-sidebar': 'menu-button',
+      'data-size': size,
+      'data-active': isActive,
+    };
 
-    // Add standard HTML attributes and data attributes
-    elementProps.ref = ref;
-    elementProps.className = cn(sidebarMenuButtonVariants({ variant, size, className: rawClassName }));
-    elementProps['data-sidebar'] = 'menu-button';
-    elementProps['data-size'] = size;
-    elementProps['data-active'] = isActive;
-
-    // Add href or type based on the component type
     if (Comp === "a") {
-      elementProps.href = propHref;
-    } else if (Comp === "button" && !elementProps.type) {
-      elementProps.type = "button";
+      if (href) (domProps as React.AnchorHTMLAttributes<HTMLAnchorElement>).href = href;
+      // Other anchor-specific props like target, rel would be in ...rest if passed by Link
+    } else if (Comp === "button" && !domProps.type) {
+      // Ensure button has a type if it's a button
+      (domProps as React.ButtonHTMLAttributes<HTMLButtonElement>).type = "button";
     }
-
-    // Explicitly delete 'asChild' from the props to be spread onto the DOM element
-    // This is the crucial step to prevent the warning if `otherRawProps` somehow contained it.
-    // sbmOwnAsChild was already destructured, so this targets any other rogue `asChild`.
-    if (elementProps.hasOwnProperty('asChild')) {
-      delete elementProps.asChild;
+    
+    // Critically ensure that an 'asChild' prop (if it somehow ended up in ...rest)
+    // is NOT passed to the underlying DOM element.
+    if ('asChild' in domProps) {
+      delete (domProps as { asChild?: any }).asChild;
     }
     
     const interactiveElement = React.createElement(
       Comp,
-      elementProps as React.HTMLAttributes<HTMLElement>,
-      // If Comp is Slot (sbmOwnAsChild is true), btnChildren are passed directly.
-      // If Comp is 'a' or 'button', wrap btnChildren for styling.
-      Comp === Slot ? btnChildren : <span style={{ display: "contents" }}>{btnChildren}</span>
+      domProps,
+      // Wrap children in a span for consistent styling and to provide a single child for flex layout
+      <span style={{ display: "contents" }}>{sbmChildren}</span>
     );
 
     if (!tooltip) {
@@ -611,7 +615,10 @@ const SidebarMenuButton = React.forwardRef<HTMLElement, SidebarMenuButtonProps>(
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>
+        <TooltipTrigger asChild> 
+          {/* TooltipTrigger asChild clones interactiveElement.
+              interactiveElement (our 'a' tag) must not have an 'asChild' prop.
+          */}
           {interactiveElement}
         </TooltipTrigger>
         <TooltipContent
