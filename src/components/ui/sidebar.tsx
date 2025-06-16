@@ -253,24 +253,21 @@ Sidebar.displayName = "Sidebar"
 const SidebarTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<typeof Button>
->(({ className, onClick, children, asChild, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   const { toggleSidebar } = useSidebar();
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    onClick?.(event);
-    toggleSidebar();
-  };
-
-  if (asChild && React.isValidElement(children)) {
+  if (props.asChild && React.isValidElement(children)) {
     const childElement = React.Children.only(children) as React.ReactElement<any>;
     return React.cloneElement(childElement, {
-      ...props, 
-      ...childElement.props, 
-      ref, 
-      className: cn(childElement.props.className, className), 
+      ref, // Pass ref to the child
+      ...props, // Spread props to the child
+      ...childElement.props, // Spread original child props
+      className: cn(childElement.props.className, className), // Merge classNames
       onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
-        childElement.props.onClick?.(event); 
-        handleClick(event); 
+        childElement.props.onClick?.(event); // Call original onClick if it exists
+        if (!event.defaultPrevented) {
+          toggleSidebar();
+        }
       },
     });
   }
@@ -282,10 +279,15 @@ const SidebarTrigger = React.forwardRef<
       variant="ghost"
       size="icon"
       className={cn("h-7 w-7", className)}
-      onClick={handleClick}
-      {...props} 
+      {...props} // Spread props here
+      onClick={(event) => {
+        props.onClick?.(event); // Call original onClick if it exists
+        if (!event.defaultPrevented) {
+          toggleSidebar();
+        }
+      }}
     >
-      <PanelLeft />
+      {children || <PanelLeft />}
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -540,54 +542,69 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
+// Define specific props SidebarMenuButton uses, plus common HTML attributes
+// It will also receive other props from Link like onClick, which fall into ...rest.
 interface SidebarMenuButtonProps
-  extends Omit<React.HTMLAttributes<HTMLElement>, "asChild" | "href">,
-    VariantProps<typeof sidebarMenuButtonVariants> {
+  extends VariantProps<typeof sidebarMenuButtonVariants> {
   children: React.ReactNode;
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-  href?: string; 
-  asChild?: boolean; // To capture and consume asChild from Link or other parents
-  [key: string]: any; // Allow other props like onClick from Link
+  href?: string; // Important: Link will pass this
+  asChild?: boolean; // Important: Link will pass this as true
+  className?: string;
+  style?: React.CSSProperties;
+  // Catch other props that Link might pass, or general HTML attributes
+  [key: string]: any;
 }
+
 
 const SidebarMenuButton = React.forwardRef<HTMLElement, SidebarMenuButtonProps>(
   (
     {
       className,
-      children,
+      children: btnChildren, // Renamed to avoid conflict if 'children' is in rest
       isActive = false,
       tooltip,
       variant = "default",
       size = "default",
-      href,
-      asChild: parentAsChild, // Capture Link's asChild, ensure it's not in domElementProps
-      ...domElementProps // Remaining props (e.g., onClick from Link, etc.)
+      href: propHref, // Explicitly capture href
+      asChild: propAsChild, // Explicitly capture asChild from Link (will be true)
+      ...restProps // All other props (e.g., onClick from Link, style, target, rel)
     },
     ref
   ) => {
     const { isMobile, state } = useSidebar();
 
-    const Comp = href ? 'a' : 'button';
+    // If propHref is present (from Link), this component should render an 'a' tag.
+    // Otherwise, it's a regular button.
+    const Comp = propHref ? 'a' : 'button';
 
-    const elementProps = {
-      ...domElementProps,
+    // Props for the actual DOM element (<a> or <button>)
+    // Crucially, propAsChild (which is true from Link) is NOT spread here.
+    const elementProps: React.AllHTMLAttributes<HTMLElement> & Record<string, any> = {
+      ...restProps, // Spread other props like onClick, target, rel, style
       ref,
       className: cn(sidebarMenuButtonVariants({ variant, size, className })),
-      "data-sidebar": "menu-button",
-      "data-size": size,
-      "data-active": isActive,
-      // Conditionally add href if Comp is 'a'
-      ...(Comp === 'a' && href && { href }),
-      // Default type for button if not specified in domElementProps
-      ...(Comp === 'button' && !domElementProps.type && { type: 'button' }),
+      'data-sidebar': 'menu-button',
+      'data-size': size,
+      'data-active': isActive,
     };
 
+    if (Comp === 'a') {
+      // href is already in elementProps if passed via propHref and ...restProps
+      // but Link passes href directly, so ensure it's set.
+      elementProps.href = propHref;
+    } else if (Comp === 'button' && !elementProps.type) {
+      // Default type for button if not specified in restProps
+      elementProps.type = 'button';
+    }
+    
+    // The actual interactive element (<a> or <button>)
+    // This element should NOT receive the 'asChild' prop from Link.
     const interactiveElement = (
-      // @ts-ignore Comp can be 'a' or 'button', TS might be picky
+      // @ts-ignore
       <Comp {...elementProps}>
-        {/* Wrap children in a span that doesn't affect layout for TooltipTrigger's single child requirement */}
-        <span style={{ display: "contents" }}>{children}</span>
+        <span style={{ display: "contents" }}>{btnChildren}</span>
       </Comp>
     );
 
@@ -595,16 +612,19 @@ const SidebarMenuButton = React.forwardRef<HTMLElement, SidebarMenuButtonProps>(
       return interactiveElement;
     }
 
-    const tooltipContentProps = typeof tooltip === "string" ? { children: tooltip } : tooltip;
-
+    // TooltipTrigger itself uses asChild, so it will clone interactiveElement
+    // and pass its own behavioral props to it. This is fine.
+    // The key is that interactiveElement itself doesn't have the problematic asChild.
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{interactiveElement}</TooltipTrigger>
+        <TooltipTrigger asChild>
+          {interactiveElement}
+        </TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
           hidden={state !== "collapsed" || isMobile}
-          {...tooltipContentProps}
+          {...(typeof tooltip === "string" ? { children: tooltip } : tooltip)}
         />
       </Tooltip>
     );
@@ -780,4 +800,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
