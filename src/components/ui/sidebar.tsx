@@ -71,8 +71,21 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
-    const [_open, _setOpen] = React.useState(defaultOpen)
+    const [_open, _setOpen] = React.useState(() => {
+      if (typeof window !== "undefined") {
+        const cookieValue = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))
+          ?.split("=")[1]
+        if (cookieValue) {
+          return cookieValue === "true"
+        }
+      }
+      return defaultOpen
+    })
+
     const open = openProp ?? _open
+    
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
         const openState = typeof value === "function" ? value(open) : value
@@ -81,15 +94,17 @@ const SidebarProvider = React.forwardRef<
         } else {
           _setOpen(openState)
         }
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        if (typeof window !== "undefined") {
+          document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        }
       },
       [setOpenProp, open]
     )
 
     const toggleSidebar = React.useCallback(() => {
       return isMobile
-        ? setOpenMobile((open) => !open)
-        : setOpen((open) => !open)
+        ? setOpenMobile((currentOpen) => !currentOpen)
+        : setOpen((currentOpen) => !currentOpen)
     }, [isMobile, setOpen, setOpenMobile])
 
     React.useEffect(() => {
@@ -561,62 +576,67 @@ interface SidebarMenuButtonSpecificProps {
   className?: string;
 }
 
+// Ensure ResolvedSidebarMenuButtonProps does not inherently include 'asChild'
+// by ensuring AnchorHTMLAttributes and ButtonHTMLAttributes are correctly Omitted.
 type ResolvedSidebarMenuButtonProps = SidebarMenuButtonSpecificProps &
   VariantProps<typeof sidebarMenuButtonVariants> &
   (
-    | ({ href: string } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'children' | 'className' | 'style'>)
-    | Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'className' | 'style'>
+    | ({ href: string } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'children' | 'className' | 'style' | 'asChild'>)
+    | Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'className' | 'style' | 'asChild'>
   );
+
 
 const SidebarMenuButton = React.forwardRef<
   HTMLAnchorElement | HTMLButtonElement,
   ResolvedSidebarMenuButtonProps
->((props, ref) => {
-  const {
-    children: sbmChildren,
-    isActive = false,
-    tooltip,
-    className: sbmClassName,
-    variant,
-    size,
-    href, // Explicitly destructure href
-    onClick, // Explicitly destructure onClick
-    target, // Explicitly destructure target
-    rel, // Explicitly destructure rel
-    type, // Explicitly destructure type (for button)
-    asChild: receivedAsChild, // Explicitly destructure asChild
-    ...otherDomAttributes // Collect all other props
-  } = props;
+>(({ // Destructuring all known props from the resolved type
+  children: sbmChildren,
+  isActive = false,
+  tooltip,
+  className: sbmClassName,
+  variant,
+  size,
+  href,
+  onClick,
+  target,
+  rel,
+  type,
+  // IMPORTANT: Explicitly destructure `asChild` here to remove it from `otherDomAttributes`
+  // We name it `_receivedAsChild` to indicate it's from the parent and we are handling it.
+  asChild: _receivedAsChild, 
+  ...otherDomAttributes // These are any other HTML attributes passed down
+}, ref) => { // 'ref' is from forwardRef, passed by the parent (e.g., Link)
 
   const { isMobile, state } = useSidebar();
-
   const isLink = typeof href === 'string';
   const Comp = isLink ? "a" : "button";
 
+  // Construct elementProps:
+  // Start with otherDomAttributes (which should be clean of 'asChild' because of the destructuring above)
   const elementProps: Record<string, any> = {
-    ...otherDomAttributes, // Spread the collected other DOM attributes
-    ref,
+    ...otherDomAttributes, // Spread other pass-through HTML attributes
+    ref: ref, // Assign the ref from forwardRef
     className: cn(sidebarMenuButtonVariants({ variant, size, className: sbmClassName })),
     'data-sidebar': 'menu-button',
     'data-size': size,
     'data-active': isActive,
   };
 
-  // Assign destructured props if they exist
-  if (onClick) {
-    elementProps.onClick = onClick;
-  }
-
+  // Add component-specific logic for Link or Button
   if (isLink) {
     elementProps.href = href;
+    if (onClick) elementProps.onClick = onClick; // onClick from Link (for navigation handling)
     if (target) elementProps.target = target;
     if (rel) elementProps.rel = rel;
   } else {
-    elementProps.type = type || 'button'; // Default type for button
+    if (onClick) elementProps.onClick = onClick; // onClick for a regular button
+    elementProps.type = type || 'button';
   }
-
-  // `receivedAsChild` is destructured but NOT spread into `elementProps`,
-  // effectively preventing it from reaching the DOM element.
+  
+  // Final safeguard: explicitly delete 'asChild' from the props object
+  // that will be spread onto the DOM element. This handles any case where
+  // 'asChild' might still be present (e.g. if otherDomAttributes somehow contained it).
+  delete (elementProps as { asChild?: any }).asChild;
 
   const interactiveElement = <Comp {...elementProps}>{sbmChildren}</Comp>;
 
@@ -626,7 +646,10 @@ const SidebarMenuButton = React.forwardRef<
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
+      <TooltipTrigger asChild> 
+        {/* interactiveElement is the child of TooltipTrigger. 
+            It must NOT have an 'asChild' prop here.
+        */}
         {interactiveElement}
       </TooltipTrigger>
       <TooltipContent
@@ -808,3 +831,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
