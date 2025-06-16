@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -28,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from '@/components/ui/card';
 
 // Mock tax rates, in a real app these would come from the TaxRates module
 const mockTaxRates: TaxRate[] = [
@@ -346,3 +348,6 @@ function ProductDialog({ isOpen, onClose, onSave, product, taxRates }: ProductDi
     </Dialog>
   );
 }
+
+
+    
