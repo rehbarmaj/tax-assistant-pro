@@ -198,7 +198,6 @@ export function ReceiptVouchersClient() {
   );
 }
 
-// This Dialog component can be shared or generalized further if more voucher types are added
 interface VoucherDialogProps {
   isOpen: boolean;
   onClose: () => void;

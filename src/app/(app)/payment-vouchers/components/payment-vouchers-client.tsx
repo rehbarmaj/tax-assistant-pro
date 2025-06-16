@@ -201,7 +201,7 @@ export function PaymentVouchersClient() {
 interface VoucherDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (voucherData: Omit<PaymentVoucher, 'id' | 'currency'> & { id?: string }) => void; // Can be generalized later if needed
+  onSave: (voucherData: Omit<PaymentVoucher, 'id' | 'currency'> & { id?: string }) => void; 
   voucher: PaymentVoucher | null;
   voucherType: 'Payment' | 'Receipt';
 }
