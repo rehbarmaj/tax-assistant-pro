@@ -65,6 +65,17 @@ const defaultJournalEntry = (): Omit<JournalEntry, 'id'> => ({
   narration: '',
 });
 
+const formatCurrency = (amount: number, currencyCode: string = 'USD') => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
+};
+
+const formatDate = (date: Date | string) => {
+  if (typeof date === 'string') {
+    return format(parseISO(date), "PPP");
+  }
+  return format(date, "PPP");
+};
+
 export function JournalVouchersClient() {
   const [vouchers, setVouchers] = useState<JournalVoucher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,17 +120,6 @@ export function JournalVouchersClient() {
     (voucher.narration && voucher.narration.toLowerCase().includes(searchTerm.toLowerCase())) ||
     voucher.entries.some(entry => entry.accountName.toLowerCase().includes(searchTerm.toLowerCase()))
   ), [vouchers, searchTerm]);
-
-  const formatCurrency = (amount: number, currencyCode: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
-  };
-
-  const formatDate = (date: Date | string) => {
-    if (typeof date === 'string') {
-      return format(parseISO(date), "PPP");
-    }
-    return format(date, "PPP");
-  };
 
   const calculateTotals = (entries: JournalEntry[]) => {
     return entries.reduce((acc, entry) => {
@@ -343,7 +343,7 @@ function JournalVoucherDialog({ isOpen, onClose, onSave, voucher }: JournalVouch
                       className={cn( "w-full justify-start text-left font-normal", !selectedDate && "text-muted-foreground")}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                      {selectedDate ? formatDate(selectedDate) : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -454,3 +454,4 @@ function JournalVoucherDialog({ isOpen, onClose, onSave, voucher }: JournalVouch
     </Dialog>
   );
 }
+
