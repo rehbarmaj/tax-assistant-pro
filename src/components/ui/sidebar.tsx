@@ -569,6 +569,7 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
+// Interface for specific props of SidebarMenuButton that are not DOM attributes or variant props
 interface SidebarMenuButtonSpecificProps {
   children: React.ReactNode;
   isActive?: boolean;
@@ -576,41 +577,56 @@ interface SidebarMenuButtonSpecificProps {
   className?: string;
 }
 
+// Combined type for all props SidebarMenuButton might receive
 type ResolvedSidebarMenuButtonProps = SidebarMenuButtonSpecificProps &
   VariantProps<typeof sidebarMenuButtonVariants> &
   (
+    // For anchor elements, omit props managed by Link/SidebarMenuButton, and 'asChild'
     | ({ href: string } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'children' | 'className' | 'style' | 'asChild'>)
+    // For button elements, omit props managed by SidebarMenuButton, and 'asChild'
     | Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'className' | 'style' | 'asChild'>
-  );
+  ) & {
+    // This `asChild` is for SidebarMenuButton's own potential asChild behavior (if it were a Slot consumer)
+    // OR to capture `asChild` forwarded by a parent like Link.
+    asChild?: boolean;
+  };
 
 
 const SidebarMenuButton = React.forwardRef<
   HTMLAnchorElement | HTMLButtonElement,
   ResolvedSidebarMenuButtonProps
 >(({
+  // Destructure all known functional/specific props
   children: sbmChildren,
   isActive = false,
   tooltip,
   className: sbmClassName,
   variant,
   size,
+  // Destructure known DOM/Link attributes explicitly
   href,
-  onClick,
+  onClick, // This will capture onClick from Link or direct prop
   target,
   rel,
-  type,
-  ...otherProps // Catches all other props, including `asChild` if passed by Link
+  type,  // For button type
+  // Explicitly capture any 'asChild' prop. This could be for SidebarMenuButton's
+  // own slotting (if it used Slot) or, more likely, an 'asChild' forwarded by Link.
+  asChild: _thisComponentsAsChildProp,
+  // Collect all other props. These might include additional attributes from Link or custom data-* attributes.
+  ...restOfAllProps
 }, ref) => {
   const { isMobile, state } = useSidebar();
   const isLink = typeof href === 'string';
   const Comp = isLink ? "a" : "button";
 
-  // Explicitly destructure `asChild` from `otherProps` to remove it.
-  // The alias `_ignoredAsChildFromLink` indicates it's captured but not used.
-  const { asChild: _ignoredAsChildFromLink, ...domSafeOtherProps } = otherProps as Omit<typeof otherProps, 'asChild'> & { asChild?: boolean };
+  // CRITICAL STEP:
+  // From the 'restOfAllProps' (which includes everything Link passes down besides what's explicitly destructured above),
+  // we must remove 'asChild' if it exists there. This ensures that an 'asChild' prop *forwarded by Link*
+  // is not spread onto the DOM element.
+  const { asChild: _asChildFromLink, ...domSafeOtherProps } = restOfAllProps;
 
   const elementProps: Record<string, any> = {
-    ...domSafeOtherProps, // Spread the "cleaned" props first
+    ...domSafeOtherProps, // Spread the Link/other props (now confirmed to be without 'asChild' from Link)
     ref: ref,
     className: cn(sidebarMenuButtonVariants({ variant, size, className: sbmClassName })),
     'data-sidebar': 'menu-button',
@@ -622,14 +638,17 @@ const SidebarMenuButton = React.forwardRef<
     elementProps.href = href;
     if (target) elementProps.target = target;
     if (rel) elementProps.rel = rel;
-    if (onClick) elementProps.onClick = onClick; // onClick from Link might be for navigation
+    // onClick is already captured if provided by Link or directly
+    if (onClick) elementProps.onClick = onClick;
   } else {
     elementProps.type = type || 'button';
-    if (onClick) elementProps.onClick = onClick; // onClick for button interaction
+    // onClick is already captured if provided directly
+    if (onClick) elementProps.onClick = onClick;
   }
 
-  // Final and most crucial safeguard: explicitly delete `asChild` if it somehow made it into elementProps.
-  // This step is defensive programming.
+  // Final safeguard: explicitly delete 'asChild' from the elementProps.
+  // This ensures that even if `_thisComponentsAsChildProp` was true (and somehow got into elementProps)
+  // or if `_asChildFromLink` was true (and somehow not removed by the spread), it's gone.
   delete (elementProps as { asChild?: any }).asChild;
 
   const interactiveElement = <Comp {...elementProps}>{sbmChildren}</Comp>;
@@ -641,6 +660,7 @@ const SidebarMenuButton = React.forwardRef<
   return (
     <Tooltip>
       <TooltipTrigger asChild>
+        {/* The `interactiveElement` here must NOT have an `asChild` prop on it. */}
         {interactiveElement}
       </TooltipTrigger>
       <TooltipContent
