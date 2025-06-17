@@ -85,7 +85,7 @@ const SidebarProvider = React.forwardRef<
     })
 
     const open = openProp ?? _open
-    
+
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
         const openState = typeof value === "function" ? value(open) : value
@@ -282,7 +282,7 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, SidebarTriggerProps>(
       const childElement = React.Children.only(children) as React.ReactElement<
         React.ButtonHTMLAttributes<HTMLButtonElement> & { ref?: React.Ref<HTMLButtonElement>; }
       >;
-      
+
       const { asChild: _childOwnAsChild, ...childPropsWithoutAsChild } = childElement.props as any;
       const { asChild: _sidebarTriggerOwnAsChild, ...safeRest } = restButtonProps;
 
@@ -576,8 +576,6 @@ interface SidebarMenuButtonSpecificProps {
   className?: string;
 }
 
-// Adjusted ResolvedSidebarMenuButtonProps to not include `asChild` at the top level.
-// The `Omit<..., 'asChild'>` in the union already handles preventing it for DOM attributes.
 type ResolvedSidebarMenuButtonProps = SidebarMenuButtonSpecificProps &
   VariantProps<typeof sidebarMenuButtonVariants> &
   (
@@ -589,7 +587,7 @@ type ResolvedSidebarMenuButtonProps = SidebarMenuButtonSpecificProps &
 const SidebarMenuButton = React.forwardRef<
   HTMLAnchorElement | HTMLButtonElement,
   ResolvedSidebarMenuButtonProps
->(({ 
+>(({
   children: sbmChildren,
   isActive = false,
   tooltip,
@@ -597,48 +595,41 @@ const SidebarMenuButton = React.forwardRef<
   variant,
   size,
   href,
-  onClick, 
+  onClick,
   target,
   rel,
   type,
-  // `asChild` is no longer a direct prop of ResolvedSidebarMenuButtonProps.
-  // If Link passes it, it will be in `...otherProps`.
-  ...otherProps 
+  ...otherProps // Catches all other props, including `asChild` if passed by Link
 }, ref) => {
   const { isMobile, state } = useSidebar();
   const isLink = typeof href === 'string';
   const Comp = isLink ? "a" : "button";
 
-  // Explicitly remove `asChild` from `otherProps` which might have come from Link (or other HOCs)
-  const { asChild: _ignoredAsChildFromOtherProps, ...domSafeOtherProps } = otherProps as Omit<typeof otherProps, 'asChild'> & { asChild?: boolean };
-
+  // Explicitly destructure `asChild` from `otherProps` to remove it.
+  // The alias `_ignoredAsChildFromLink` indicates it's captured but not used.
+  const { asChild: _ignoredAsChildFromLink, ...domSafeOtherProps } = otherProps as Omit<typeof otherProps, 'asChild'> & { asChild?: boolean };
 
   const elementProps: Record<string, any> = {
-    ...domSafeOtherProps, // Spread filtered props that are safe for the DOM
+    ...domSafeOtherProps, // Spread the "cleaned" props first
     ref: ref,
     className: cn(sidebarMenuButtonVariants({ variant, size, className: sbmClassName })),
     'data-sidebar': 'menu-button',
     'data-size': size,
     'data-active': isActive,
   };
-  
+
   if (isLink) {
     elementProps.href = href;
     if (target) elementProps.target = target;
     if (rel) elementProps.rel = rel;
-    // Link component handles its own onClick for navigation.
-    // If an onClick was passed directly to SidebarMenuButton, or if Link passes one,
-    // it's already in domSafeOtherProps (if it's a valid DOM prop).
-    // If onClick was a specific prop for SidebarMenuButton's logic, it's handled via the `onClick` prop.
-    if(onClick) elementProps.onClick = onClick;
-
-
+    if (onClick) elementProps.onClick = onClick; // onClick from Link might be for navigation
   } else {
     elementProps.type = type || 'button';
-    if (onClick) elementProps.onClick = onClick; // Assign direct onClick for button
+    if (onClick) elementProps.onClick = onClick; // onClick for button interaction
   }
-  
-  // Final explicit removal of asChild. This should be redundant if the above is correct.
+
+  // Final and most crucial safeguard: explicitly delete `asChild` if it somehow made it into elementProps.
+  // This step is defensive programming.
   delete (elementProps as { asChild?: any }).asChild;
 
   const interactiveElement = <Comp {...elementProps}>{sbmChildren}</Comp>;
@@ -831,4 +822,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
