@@ -576,6 +576,8 @@ interface SidebarMenuButtonSpecificProps {
   className?: string;
 }
 
+// Adjusted ResolvedSidebarMenuButtonProps to not include `asChild` at the top level.
+// The `Omit<..., 'asChild'>` in the union already handles preventing it for DOM attributes.
 type ResolvedSidebarMenuButtonProps = SidebarMenuButtonSpecificProps &
   VariantProps<typeof sidebarMenuButtonVariants> &
   (
@@ -595,24 +597,24 @@ const SidebarMenuButton = React.forwardRef<
   variant,
   size,
   href,
-  onClick: propOnClick,
+  onClick, 
   target,
   rel,
   type,
-  asChild: _thisComponentsAsChildProp, // Captures if SidebarMenuButton itself was called with asChild
-  ...restOfAllProps // Contains props from Link AND any other direct props not listed above
+  // `asChild` is no longer a direct prop of ResolvedSidebarMenuButtonProps.
+  // If Link passes it, it will be in `...otherProps`.
+  ...otherProps 
 }, ref) => {
   const { isMobile, state } = useSidebar();
   const isLink = typeof href === 'string';
   const Comp = isLink ? "a" : "button";
 
-  // Separate asChild from the restOfAllProps that Link might have passed
-  const { asChild: _linkOrRestAsChild, ...safeRestProps } = restOfAllProps;
+  // Explicitly remove `asChild` from `otherProps` which might have come from Link (or other HOCs)
+  const { asChild: _ignoredAsChildFromOtherProps, ...domSafeOtherProps } = otherProps as Omit<typeof otherProps, 'asChild'> & { asChild?: boolean };
 
-  const handleClick = isLink ? safeRestProps.onClick || propOnClick : propOnClick;
 
   const elementProps: Record<string, any> = {
-    ...safeRestProps, // Spread the version guaranteed to not have asChild from ...restOfAllProps
+    ...domSafeOtherProps, // Spread filtered props that are safe for the DOM
     ref: ref,
     className: cn(sidebarMenuButtonVariants({ variant, size, className: sbmClassName })),
     'data-sidebar': 'menu-button',
@@ -624,19 +626,20 @@ const SidebarMenuButton = React.forwardRef<
     elementProps.href = href;
     if (target) elementProps.target = target;
     if (rel) elementProps.rel = rel;
+    // Link component handles its own onClick for navigation.
+    // If an onClick was passed directly to SidebarMenuButton, or if Link passes one,
+    // it's already in domSafeOtherProps (if it's a valid DOM prop).
+    // If onClick was a specific prop for SidebarMenuButton's logic, it's handled via the `onClick` prop.
+    if(onClick) elementProps.onClick = onClick;
+
+
   } else {
     elementProps.type = type || 'button';
-  }
-
-  if (handleClick) {
-    elementProps.onClick = handleClick;
+    if (onClick) elementProps.onClick = onClick; // Assign direct onClick for button
   }
   
-  // _thisComponentsAsChildProp is captured if SidebarMenuButton was directly called with asChild.
-  // _linkOrRestAsChild is captured if Link (or other spread source) passed asChild.
-  // Neither of these are included in elementProps at this point due to destructuring.
-  // This final delete is an explicit safeguard.
-  delete (elementProps as { asChild?: any }).asChild; 
+  // Final explicit removal of asChild. This should be redundant if the above is correct.
+  delete (elementProps as { asChild?: any }).asChild;
 
   const interactiveElement = <Comp {...elementProps}>{sbmChildren}</Comp>;
 
@@ -828,3 +831,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
