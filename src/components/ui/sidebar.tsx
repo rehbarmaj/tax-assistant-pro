@@ -536,15 +536,14 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-type SidebarMenuButtonProps = (
-  | (React.ComponentPropsWithoutRef<"button"> & { href?: never })
-  | React.ComponentPropsWithoutRef<"a">
-) & {
+type SidebarMenuButtonProps = (React.HTMLAttributes<HTMLButtonElement | HTMLAnchorElement>) & {
   children: React.ReactNode;
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
   variant?: VariantProps<typeof sidebarMenuButtonVariants>["variant"];
   size?: VariantProps<typeof sidebarMenuButtonVariants>["size"];
+  href?: string;
+  asChild?: boolean; // Accept asChild
 };
 
 const SidebarMenuButton = React.forwardRef<
@@ -552,20 +551,22 @@ const SidebarMenuButton = React.forwardRef<
   SidebarMenuButtonProps
 >(({ children, className, variant, size, isActive, tooltip, ...props }, ref) => {
   const { isMobile, state } = useSidebar();
-
-  const isLink = props.href !== undefined;
-  const Comp = isLink ? "a" : "button";
-
-  // This is the crucial part: create a new props object for the DOM element
-  // that explicitly excludes `asChild`.
+  
+  // The core of the fix:
+  // `props` contains everything else, including what `Link` passes down.
+  // We destructure `asChild` out of it and put the rest into `safeProps`.
+  // The `asChild` variable itself is never used, effectively removing it.
   const { asChild, ...safeProps } = props;
+
+  const isLink = safeProps.href !== undefined;
+  const Comp = isLink ? "a" : "button";
 
   const element = (
     <Comp
       ref={ref}
       className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
       data-active={isActive}
-      {...safeProps}
+      {...safeProps} // Spread only the safe props
     >
       {children}
     </Comp>
