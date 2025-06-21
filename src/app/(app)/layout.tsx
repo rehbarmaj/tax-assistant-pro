@@ -25,7 +25,9 @@ import {
   Menu,
   ArrowBigUpDash,
   ArrowBigDownDash,
-  BookCopy, // Added for Journal Vouchers
+  BookCopy,
+  ShoppingCart,
+  ClipboardList,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,9 +39,11 @@ const navItems = [
   { href: '/products', label: 'Products', icon: Package },
   { href: '/tax-rates', label: 'Tax Rates', icon: Percent },
   { href: '/accounts', label: 'Accounts', icon: Landmark },
+  { href: '/purchase-notes', label: 'Purchase Notes', icon: ShoppingCart },
+  { href: '/sale-notes', label: 'Sale Notes', icon: ClipboardList },
   { href: '/payment-vouchers', label: 'Payment Vouchers', icon: ArrowBigUpDash },
   { href: '/receipt-vouchers', label: 'Receipt Vouchers', icon: ArrowBigDownDash },
-  { href: '/journal-vouchers', label: 'Journal Vouchers', icon: BookCopy }, // Added Journal Vouchers
+  { href: '/journal-vouchers', label: 'Journal Vouchers', icon: BookCopy },
   { href: '/income-tax-estimator', label: 'Income Tax Estimator', icon: Calculator },
   { href: '/reports', label: 'Reports', icon: FileText },
 ];
@@ -113,4 +117,3 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
-

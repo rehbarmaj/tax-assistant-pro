@@ -1,5 +1,6 @@
 
 
+
 export interface Product {
   id: string;
   code: string;
@@ -95,3 +96,35 @@ export interface JournalVoucher {
   currency: string; // e.g., 'USD'
 }
 
+// For Purchase and Sale Notes
+export interface DocumentItem {
+  id: string; // Unique ID for the document line item
+  productId: string;
+  productName?: string; // Denormalized for display
+  quantity: number;
+  unitPrice: number;
+  taxRateId?: string;
+  taxAmount: number;
+  totalAmount: number; // (quantity * unitPrice) + taxAmount
+}
+
+interface BaseDocument {
+  id: string;
+  noteNumber: string;
+  date: Date;
+  subTotal: number; // Sum of (quantity * unitPrice) for all items
+  discountAmount: number;
+  totalTaxAmount: number; // Sum of taxAmount for all items
+  grandTotal: number; // subTotal - discountAmount + totalTaxAmount
+  currency: string;
+  items: DocumentItem[];
+  narration?: string;
+}
+
+export interface PurchaseNote extends BaseDocument {
+  supplierName: string;
+}
+
+export interface SaleNote extends BaseDocument {
+  customerName: string;
+}
