@@ -69,12 +69,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <SidebarMenuItem key={item.href}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={item.href} asChild>
-                        <SidebarMenuButton className="justify-start">
-                          <item.icon className="h-5 w-5" />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </Link>
+                      <SidebarMenuButton href={item.href} className="justify-start">
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
                     </TooltipTrigger>
                     <TooltipContent side="right" align="center">
                       {item.label}

@@ -2,6 +2,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
@@ -537,42 +538,29 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-type SidebarMenuButtonProps = {
-  children: React.ReactNode;
-  isActive?: boolean;
-} & VariantProps<typeof sidebarMenuButtonVariants> & (Omit<React.ComponentPropsWithoutRef<'button'>, "children"> | Omit<React.ComponentPropsWithoutRef<'a'>, "children">);
+type SidebarMenuButtonProps = React.ComponentPropsWithoutRef<typeof Link> &
+  VariantProps<typeof sidebarMenuButtonVariants> & {
+    isActive?: boolean
+  }
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLButtonElement & HTMLAnchorElement,
+  HTMLAnchorElement,
   SidebarMenuButtonProps
->(({ 
-  children,
-  className,
-  variant,
-  size,
-  isActive: isActiveProp,
-  ...props 
-}, ref) => {
-  const pathname = usePathname();
-
-  const { asChild, ...safeProps } = props as { asChild?: boolean } & typeof props;
-
-  const isLink = 'href' in safeProps && safeProps.href !== undefined;
-  const Comp = asChild ? Slot : (isLink ? 'a' : 'button');
-  
-  const isActive = isActiveProp !== undefined ? isActiveProp : (isLink && pathname === safeProps.href);
+>(({ className, variant, size, children, isActive: isActiveProp, ...props }, ref) => {
+  const pathname = usePathname()
+  const isActive = isActiveProp ?? pathname === props.href
 
   return (
-    <Comp
+    <Link
       ref={ref}
       className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
       data-active={isActive || undefined}
-      {...safeProps}
+      {...props}
     >
       {children}
-    </Comp>
-  );
-});
+    </Link>
+  )
+})
 SidebarMenuButton.displayName = "SidebarMenuButton"
 
 const SidebarMenuAction = React.forwardRef<
