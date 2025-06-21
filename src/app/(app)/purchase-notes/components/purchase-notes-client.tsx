@@ -54,8 +54,8 @@ const initialPurchaseNotes: PurchaseNote[] = [
     date: new Date('2023-10-01'), 
     supplierName: 'Tech Supplies Inc.',
     items: [
-      { id: 'item1', productId: '1', productName: 'Premium Keyboard', quantity: 10, unitPrice: 45, taxRateId: 'rate3', taxAmount: 81, totalAmount: 531 },
-      { id: 'item2', productId: '2', productName: 'Optical Mouse', quantity: 20, unitPrice: 10, taxRateId: 'rate2', taxAmount: 24, totalAmount: 224 },
+      { id: 'item1', productId: '1', productName: 'Premium Keyboard', hsnSac: '847160', serialNumber: 'SN-KBD-001', quantity: 10, unitPrice: 45, taxRateId: 'rate3', taxAmount: 81, totalAmount: 531 },
+      { id: 'item2', productId: '2', productName: 'Optical Mouse', hsnSac: '847160', serialNumber: 'SN-MOU-005', quantity: 20, unitPrice: 10, taxRateId: 'rate2', taxAmount: 24, totalAmount: 224 },
     ],
     subTotal: 650,
     discountAmount: 0,
@@ -180,7 +180,7 @@ interface PurchaseNoteDialogProps {
 }
 
 const defaultItem = (): Omit<DocumentItem, 'id'|'productName'|'taxAmount'|'totalAmount'> => ({
-    productId: '', quantity: 1, unitPrice: 0, taxRateId: mockTaxRates.find(r => r.rate === 0)?.id
+    productId: '', hsnSac: '', serialNumber: '', quantity: 1, unitPrice: 0, taxRateId: mockTaxRates.find(r => r.rate === 0)?.id
 });
 
 function PurchaseNoteDialog({ isOpen, onClose, onSave, note }: PurchaseNoteDialogProps) {
@@ -228,8 +228,11 @@ function PurchaseNoteDialog({ isOpen, onClose, onSave, note }: PurchaseNoteDialo
         item.productName = product?.name || '';
         item.unitPrice = product?.purchasePrice || 0;
         item.taxRateId = product?.taxRateId;
+        item.hsnSac = product?.hsnSac || '';
+    } else if (field === 'quantity' || field === 'unitPrice') {
+        (item as any)[field] = parseFloat(value) || 0;
     } else {
-        (item as any)[field] = (field === 'quantity' || field === 'unitPrice') ? parseFloat(value) : value;
+        (item as any)[field] = value;
     }
 
     newItems[index] = item;
@@ -263,7 +266,7 @@ function PurchaseNoteDialog({ isOpen, onClose, onSave, note }: PurchaseNoteDialo
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}><DialogContent className="max-w-4xl shadow-xl">
+    <Dialog open={isOpen} onOpenChange={onClose}><DialogContent className="max-w-5xl shadow-xl">
       <DialogHeader>
         <DialogTitle>{note ? 'Edit Purchase Note' : 'Add New Purchase Note'}</DialogTitle>
         <DialogDescription>Fill in the details for the purchase. All fields in item rows are required.</DialogDescription>
@@ -280,8 +283,13 @@ function PurchaseNoteDialog({ isOpen, onClose, onSave, note }: PurchaseNoteDialo
           <Label className="text-base font-semibold px-4 pt-4 block">Items</Label>
           <ScrollArea className="h-[250px] p-4"><Table className="min-w-full">
             <TableHeader><TableRow>
-              <TableHead className="w-[35%]">Product</TableHead><TableHead className="w-[10%]">Qty</TableHead><TableHead className="w-[15%]">Unit Price</TableHead>
-              <TableHead className="w-[25%]">Tax Rate</TableHead><TableHead className="w-[10%] text-right">Line Total</TableHead><TableHead className="w-[5%]">Act</TableHead>
+              <TableHead className="w-[25%]">Product</TableHead>
+              <TableHead className="w-[20%]">HSN / Serial #</TableHead>
+              <TableHead className="w-[10%]">Qty</TableHead>
+              <TableHead className="w-[10%]">Unit Price</TableHead>
+              <TableHead className="w-[15%]">Tax Rate</TableHead>
+              <TableHead className="w-[15%] text-right">Line Total</TableHead>
+              <TableHead className="w-[5%]">Act</TableHead>
             </TableRow></TableHeader>
             <TableBody>{formData.items?.map((item, index) => {
               const lineSubtotal = item.quantity * item.unitPrice;
@@ -292,9 +300,13 @@ function PurchaseNoteDialog({ isOpen, onClose, onSave, note }: PurchaseNoteDialo
                 <TableCell><Select value={item.productId} onValueChange={(val) => handleItemChange(index, 'productId', val)} required><SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger><SelectContent>
                   {mockProducts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                 </SelectContent></Select></TableCell>
-                <TableCell><Input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required min={1} /></TableCell>
-                <TableCell><Input type="number" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} required min={0} /></TableCell>
-                <TableCell><Select value={item.taxRateId} onValueChange={(val) => handleItemChange(index, 'taxRateId', val)}><SelectTrigger><SelectValue placeholder="Select Tax" /></SelectTrigger><SelectContent>
+                <TableCell>
+                  <Input value={item.hsnSac || ''} onChange={(e) => handleItemChange(index, 'hsnSac', e.target.value)} placeholder="HSN/SAC" className="mb-1 h-8" />
+                  <Input value={item.serialNumber || ''} onChange={(e) => handleItemChange(index, 'serialNumber', e.target.value)} placeholder="Serial #" className="h-8" />
+                </TableCell>
+                <TableCell><Input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required min={1} className="h-8" /></TableCell>
+                <TableCell><Input type="number" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} required min={0} className="h-8" /></TableCell>
+                <TableCell><Select value={item.taxRateId} onValueChange={(val) => handleItemChange(index, 'taxRateId', val)}><SelectTrigger className="h-8"><SelectValue placeholder="Select Tax" /></SelectTrigger><SelectContent>
                   {mockTaxRates.map(r => <SelectItem key={r.id} value={r.id}>{r.name} ({r.rate}%)</SelectItem>)}
                 </SelectContent></Select></TableCell>
                 <TableCell className="text-right font-medium">{formatCurrency(lineTotal)}</TableCell>

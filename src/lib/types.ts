@@ -2,6 +2,7 @@
 
 
 
+
 export interface Product {
   id: string;
   code: string;
@@ -102,6 +103,8 @@ export interface DocumentItem {
   id: string; // Unique ID for the document line item
   productId: string;
   productName?: string; // Denormalized for display
+  hsnSac?: string; // Denormalized HSN/SAC code
+  serialNumber?: string; // Optional serial number for the item
   quantity: number;
   unitPrice: number;
   taxRateId?: string;
