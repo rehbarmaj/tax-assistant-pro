@@ -536,55 +536,40 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-type ResolvedSidebarMenuButtonProps =
-  | ({
-      asChild: true
-      children: React.ReactNode
-    } & (
-      | React.ComponentProps<typeof Slot>
-      | Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "asChild">
-      | Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "asChild">
-    ))
-  | ({ asChild?: false } & (
-      | React.ComponentProps<typeof Slot>
-      | React.AnchorHTMLAttributes<HTMLAnchorElement>
-      | React.ButtonHTMLAttributes<HTMLButtonElement>
-    ))
-
-type SidebarMenuButtonProps = ResolvedSidebarMenuButtonProps & {
-  children: React.ReactNode
-  isActive?: boolean
-  tooltip?: string | React.ComponentProps<typeof TooltipContent>
-  variant?: VariantProps<typeof sidebarMenuButtonVariants>["variant"]
-  size?: VariantProps<typeof sidebarMenuButtonVariants>["size"]
-}
+type SidebarMenuButtonProps = (
+  | (React.ComponentPropsWithoutRef<"button"> & { href?: never })
+  | React.ComponentPropsWithoutRef<"a">
+) & {
+  children: React.ReactNode;
+  isActive?: boolean;
+  tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+  variant?: VariantProps<typeof sidebarMenuButtonVariants>["variant"];
+  size?: VariantProps<typeof sidebarMenuButtonVariants>["size"];
+};
 
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement & HTMLAnchorElement,
   SidebarMenuButtonProps
->(({ children, isActive = false, tooltip, className, variant, size, ...props }, ref) => {
+>(({ children, className, variant, size, isActive, tooltip, ...props }, ref) => {
   const { isMobile, state } = useSidebar();
-  const { asChild: _thisComponentsAsChildProp, ...restOfAllProps } = props;
-  const { href, ...otherProps } = restOfAllProps as { href?: string; [key: string]: any };
 
-  const { asChild: _ignoredAsChildFromOtherProps, ...domSafeOtherProps } = otherProps;
+  const isLink = props.href !== undefined;
+  const Comp = isLink ? "a" : "button";
 
-  const isLink = typeof href === "string";
-  const Comp = _thisComponentsAsChildProp ? Slot : isLink ? "a" : "button";
+  // This is the crucial part: create a new props object for the DOM element
+  // that explicitly excludes `asChild`.
+  const { asChild, ...safeProps } = props;
 
-  const elementProps = {
-    ...domSafeOtherProps,
-    ref,
-    className: cn(sidebarMenuButtonVariants({ variant, size, className })),
-    "data-sidebar": "menu-button",
-    "data-size": size,
-    "data-active": isActive,
-    href,
-  };
-  
-  delete (elementProps as { asChild?: any }).asChild;
-
-  const element = React.createElement(Comp, elementProps, children);
+  const element = (
+    <Comp
+      ref={ref}
+      className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
+      data-active={isActive}
+      {...safeProps}
+    >
+      {children}
+    </Comp>
+  );
 
   if (!tooltip) {
     return element;
@@ -597,13 +582,12 @@ const SidebarMenuButton = React.forwardRef<
         side="right"
         align="center"
         hidden={state !== "collapsed" || isMobile}
-        {...(typeof tooltip === "string" ? { children: tooltip } : tooltip)}
+        {...(typeof tooltip === "string" ? { children: tooltip } : { ...tooltip })}
       />
     </Tooltip>
   );
 });
 SidebarMenuButton.displayName = "SidebarMenuButton"
-
 
 const SidebarMenuAction = React.forwardRef<
   HTMLButtonElement,
