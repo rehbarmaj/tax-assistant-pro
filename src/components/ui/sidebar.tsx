@@ -537,34 +537,43 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-type SidebarMenuButtonProps = (React.HTMLAttributes<HTMLButtonElement | HTMLAnchorElement>) & {
+type SidebarMenuButtonProps = {
   children: React.ReactNode;
   isActive?: boolean;
-  tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-  variant?: VariantProps<typeof sidebarMenuButtonVariants>["variant"];
-  size?: VariantProps<typeof sidebarMenuButtonVariants>["size"];
-};
+  tooltip?: string | Omit<React.ComponentPropsWithoutRef<typeof TooltipContent>, "children"> & { children: React.ReactNode };
+} & VariantProps<typeof sidebarMenuButtonVariants> & (Omit<React.ComponentPropsWithoutRef<'button'>, "children"> | Omit<React.ComponentPropsWithoutRef<'a'>, "children">);
 
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement & HTMLAnchorElement,
   SidebarMenuButtonProps
->(({ children, className, variant, size, isActive: isActiveProp, tooltip, ...props }, ref) => {
+>(({ 
+  children,
+  className,
+  variant,
+  size,
+  isActive: isActiveProp,
+  tooltip,
+  ...props 
+}, ref) => {
   const { isMobile, state } = useSidebar();
   const pathname = usePathname();
   
-  const { asChild, ...safeProps } = props;
+  // This is the key fix: We destructure `asChild` from the props passed down
+  // (e.g., from a <Link asChild> parent) and discard it. 
+  // The remaining `domProps` are safe to spread onto the DOM element.
+  const { asChild, ...domProps } = props as { asChild?: boolean };
 
-  const isLink = safeProps.href !== undefined;
-  const Comp = isLink ? "a" : "button";
-
-  const isActive = isActiveProp !== undefined ? isActiveProp : (isLink && pathname === safeProps.href);
+  const isLink = 'href' in domProps && domProps.href !== undefined;
+  const Comp = isLink ? 'a' : 'button';
+  
+  const isActive = isActiveProp !== undefined ? isActiveProp : (isLink && pathname === domProps.href);
 
   const element = (
     <Comp
       ref={ref}
       className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-      data-active={isActive ? true : undefined}
-      {...safeProps}
+      data-active={isActive || undefined}
+      {...domProps}
     >
       {children}
     </Comp>
@@ -574,6 +583,10 @@ const SidebarMenuButton = React.forwardRef<
     return element;
   }
 
+  const tooltipContentProps = typeof tooltip === 'string' 
+    ? { children: tooltip } 
+    : tooltip;
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>{element}</TooltipTrigger>
@@ -581,7 +594,7 @@ const SidebarMenuButton = React.forwardRef<
         side="right"
         align="center"
         hidden={state !== "collapsed" || isMobile}
-        {...(typeof tooltip === "string" ? { children: tooltip } : { ...tooltip })}
+        {...tooltipContentProps}
       />
     </Tooltip>
   );
