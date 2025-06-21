@@ -540,7 +540,6 @@ const sidebarMenuButtonVariants = cva(
 type SidebarMenuButtonProps = {
   children: React.ReactNode;
   isActive?: boolean;
-  tooltip?: string | Omit<React.ComponentPropsWithoutRef<typeof TooltipContent>, "children"> & { children: React.ReactNode };
 } & VariantProps<typeof sidebarMenuButtonVariants> & (Omit<React.ComponentPropsWithoutRef<'button'>, "children"> | Omit<React.ComponentPropsWithoutRef<'a'>, "children">);
 
 const SidebarMenuButton = React.forwardRef<
@@ -552,51 +551,26 @@ const SidebarMenuButton = React.forwardRef<
   variant,
   size,
   isActive: isActiveProp,
-  tooltip,
   ...props 
 }, ref) => {
-  const { isMobile, state } = useSidebar();
   const pathname = usePathname();
-  
-  // This is the key fix: We destructure `asChild` from the props passed down
-  // (e.g., from a <Link asChild> parent) and discard it. 
-  // The remaining `domProps` are safe to spread onto the DOM element.
-  const { asChild, ...domProps } = props as { asChild?: boolean };
 
-  const isLink = 'href' in domProps && domProps.href !== undefined;
-  const Comp = isLink ? 'a' : 'button';
-  
-  const isActive = isActiveProp !== undefined ? isActiveProp : (isLink && pathname === domProps.href);
+  const { asChild, ...safeProps } = props as { asChild?: boolean } & typeof props;
 
-  const element = (
+  const isLink = 'href' in safeProps && safeProps.href !== undefined;
+  const Comp = asChild ? Slot : (isLink ? 'a' : 'button');
+  
+  const isActive = isActiveProp !== undefined ? isActiveProp : (isLink && pathname === safeProps.href);
+
+  return (
     <Comp
       ref={ref}
       className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
       data-active={isActive || undefined}
-      {...domProps}
+      {...safeProps}
     >
       {children}
     </Comp>
-  );
-
-  if (!tooltip) {
-    return element;
-  }
-
-  const tooltipContentProps = typeof tooltip === 'string' 
-    ? { children: tooltip } 
-    : tooltip;
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{element}</TooltipTrigger>
-      <TooltipContent
-        side="right"
-        align="center"
-        hidden={state !== "collapsed" || isMobile}
-        {...tooltipContentProps}
-      />
-    </Tooltip>
   );
 });
 SidebarMenuButton.displayName = "SidebarMenuButton"

@@ -1,5 +1,4 @@
 
-
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import {
@@ -34,6 +33,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const navItems = [
@@ -67,15 +67,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <SidebarMenu className="p-4 pt-0">
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <Link href={item.href} asChild>
-                    <SidebarMenuButton
-                      tooltip={{children: item.label, side: "right", align: "center"}}
-                      className="justify-start"
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </Link>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href={item.href} asChild>
+                        <SidebarMenuButton className="justify-start">
+                          <item.icon className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" align="center">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
