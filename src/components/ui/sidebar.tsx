@@ -2,6 +2,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
@@ -542,31 +543,28 @@ type SidebarMenuButtonProps = (React.HTMLAttributes<HTMLButtonElement | HTMLAnch
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
   variant?: VariantProps<typeof sidebarMenuButtonVariants>["variant"];
   size?: VariantProps<typeof sidebarMenuButtonVariants>["size"];
-  href?: string;
-  asChild?: boolean; // Accept asChild
 };
 
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement & HTMLAnchorElement,
   SidebarMenuButtonProps
->(({ children, className, variant, size, isActive, tooltip, ...props }, ref) => {
+>(({ children, className, variant, size, isActive: isActiveProp, tooltip, ...props }, ref) => {
   const { isMobile, state } = useSidebar();
+  const pathname = usePathname();
   
-  // The core of the fix:
-  // `props` contains everything else, including what `Link` passes down.
-  // We destructure `asChild` out of it and put the rest into `safeProps`.
-  // The `asChild` variable itself is never used, effectively removing it.
   const { asChild, ...safeProps } = props;
 
   const isLink = safeProps.href !== undefined;
   const Comp = isLink ? "a" : "button";
 
+  const isActive = isActiveProp !== undefined ? isActiveProp : (isLink && pathname === safeProps.href);
+
   const element = (
     <Comp
       ref={ref}
       className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-      data-active={isActive}
-      {...safeProps} // Spread only the safe props
+      data-active={isActive ? true : undefined}
+      {...safeProps}
     >
       {children}
     </Comp>
