@@ -1,6 +1,7 @@
 
 
 
+
 export interface Product {
   id: string;
   code: string;
@@ -109,7 +110,7 @@ export interface DocumentItem {
 }
 
 interface BaseDocument {
-  id: string;
+  id:string;
   noteNumber: string;
   date: Date;
   subTotal: number; // Sum of (quantity * unitPrice) for all items
@@ -127,4 +128,14 @@ export interface PurchaseNote extends BaseDocument {
 
 export interface SaleNote extends BaseDocument {
   customerName: string;
+}
+
+export interface PurchaseReturnNote extends BaseDocument {
+  supplierName: string;
+  originalPurchaseNoteNumber: string;
+}
+
+export interface SaleReturnNote extends BaseDocument {
+  customerName: string;
+  originalSaleNoteNumber: string;
 }

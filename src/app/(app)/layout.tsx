@@ -28,6 +28,8 @@ import {
   BookCopy,
   ShoppingCart,
   ClipboardList,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,7 +42,9 @@ const navItems = [
   { href: '/tax-rates', label: 'Tax Rates', icon: Percent },
   { href: '/accounts', label: 'Accounts', icon: Landmark },
   { href: '/purchase-notes', label: 'Purchase Notes', icon: ShoppingCart },
+  { href: '/purchase-returns', label: 'Purchase Returns', icon: Undo2 },
   { href: '/sale-notes', label: 'Sale Notes', icon: ClipboardList },
+  { href: '/sales-returns', label: 'Sale Returns', icon: Redo2 },
   { href: '/payment-vouchers', label: 'Payment Vouchers', icon: ArrowBigUpDash },
   { href: '/receipt-vouchers', label: 'Receipt Vouchers', icon: ArrowBigDownDash },
   { href: '/journal-vouchers', label: 'Journal Vouchers', icon: BookCopy },

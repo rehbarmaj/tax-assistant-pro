@@ -1,58 +1,114 @@
+
 "use client";
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Download, FileText, BarChart3, PackageSearch } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, FileText, BarChart3, PackageSearch, Users, Building } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import Image from 'next/image';
 
-type ReportType = 'sales-tax' | 'income-tax' | 'inventory-movement';
+type ReportType = 
+  | 'sales-summary' | 'purchase-summary' | 'tax-summary' | 'inventory-impact' 
+  | 'customer-ledger' | 'supplier-ledger' | 'detailed-document';
 
-const reportTypes: { value: ReportType; label: string; icon: React.ElementType }[] = [
-  { value: 'sales-tax', label: 'Sales Tax Report', icon: FileText },
-  { value: 'income-tax', label: 'Income Tax Summary', icon: BarChart3 },
-  { value: 'inventory-movement', label: 'Inventory Movement Report', icon: PackageSearch },
+const reportTypes: { 
+  label: string; 
+  reports: { value: ReportType; label: string; icon: React.ElementType }[] 
+}[] = [
+  {
+    label: "Financial Reports",
+    reports: [
+      { value: 'sales-summary', label: 'Sales Summary', icon: BarChart3 },
+      { value: 'purchase-summary', label: 'Purchase Summary', icon: PackageSearch },
+      { value: 'tax-summary', label: 'Tax Summary Report', icon: FileText },
+    ]
+  },
+  {
+    label: "Ledger Reports",
+    reports: [
+      { value: 'customer-ledger', label: 'Customer Ledger', icon: Users },
+      { value: 'supplier-ledger', label: 'Supplier Ledger', icon: Building },
+    ]
+  },
+  {
+    label: "Inventory Reports",
+    reports: [
+       { value: 'inventory-impact', label: 'Inventory Impact Report', icon: PackageSearch },
+    ]
+  },
 ];
+
+const mockCustomers = [{ id: '1', name: 'Global Corp' }, { id: '2', name: 'Innovate LLC' }];
+const mockSuppliers = [{ id: '1', name: 'Tech Supplies Inc.' }, { id: '2', name: 'Office Essentials' }];
+
 
 export function ReportsClient() {
   const [reportType, setReportType] = useState<ReportType | undefined>(undefined);
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date(new Date().getFullYear(), 0, 1));
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [selectedParty, setSelectedParty] = useState<string | undefined>(undefined);
   const [generatedReport, setGeneratedReport] = useState<string | null>(null);
 
+  const getReportDetails = (type?: ReportType) => {
+    if (!type) return null;
+    for (const group of reportTypes) {
+        const found = group.reports.find(r => r.value === type);
+        if (found) return found;
+    }
+    return null;
+  }
+
   const handleGenerateReport = () => {
-    if (!reportType || !startDate || !endDate) {
+    const reportDetails = getReportDetails(reportType);
+    if (!reportDetails || !startDate || !endDate) {
       alert('Please select a report type and date range.');
       return;
     }
-    const selectedReport = reportTypes.find(rt => rt.value === reportType);
+    
+    let partyInfo = '';
+    if (reportType === 'customer-ledger' && selectedParty) {
+        partyInfo = `Customer: ${mockCustomers.find(c => c.id === selectedParty)?.name}`;
+    } else if (reportType === 'supplier-ledger' && selectedParty) {
+        partyInfo = `Supplier: ${mockSuppliers.find(s => s.id === selectedParty)?.name}`;
+    }
+
     const reportContent = `
-      Report Type: ${selectedReport?.label}
-      Period: ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
+      **Report Type:** ${reportDetails.label}
+      **Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
+      ${partyInfo ? `**${partyInfo}**` : ''}
       
-      This is a placeholder for the ${selectedReport?.label}. 
-      In a real application, this section would contain detailed data, tables, and summaries relevant to the selected report.
-      For example, a Sales Tax Report would show taxable sales, tax collected, etc.
-      An Income Tax Summary would show profit calculations and estimated tax liabilities.
-      An Inventory Movement Report would detail stock in, stock out, and current levels.
+      --- MOCK DATA ---
+      
+      | Date       | Document# | Details                 | Debit     | Credit    | Balance   |
+      |------------|-----------|-------------------------|-----------|-----------|-----------|
+      | 2023-10-01 | SN001     | Sale Note               | $590.00   |           | $590.00   |
+      | 2023-10-05 | RV002     | Receipt from customer   |           | $590.00   | $0.00     |
+      | 2023-10-10 | SN002     | Sale Note               | $120.50   |           | $120.50   |
+      | 2023-10-12 | SRN001    | Sales Return Note       |           | ($80.00)  | $40.50    |
+      
+      **Summary:**
+      Total Debits: $710.50
+      Total Credits: ($670.00)
+      **Closing Balance: $40.50**
+      
+      --- End of Mock Data ---
     `;
     setGeneratedReport(reportContent);
   };
-
+  
   const handleExport = (formatType: 'PDF' | 'Excel') => {
     if (!generatedReport) {
       alert('Please generate a report first.');
       return;
     }
-    console.log(`Exporting report as ${formatType}...`);
     // Mock file download
-    const blob = new Blob([generatedReport + `\n\nExported as ${formatType}`], { type: 'text/plain' });
+    const blob = new Blob([generatedReport], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -67,7 +123,7 @@ export function ReportsClient() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-primary">Custom Tax Reports</h1>
+        <h1 className="text-3xl font-bold text-primary">Custom Reports</h1>
       </div>
 
       <Card className="shadow-xl mb-8">
@@ -75,75 +131,60 @@ export function ReportsClient() {
           <CardTitle>Report Configuration</CardTitle>
           <CardDescription>Select report type and date range to generate your custom report.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
+        <CardContent className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="space-y-2 lg:col-span-2 xl:col-span-1">
             <Label htmlFor="reportType">Report Type</Label>
-            <Select value={reportType} onValueChange={(value: ReportType) => setReportType(value)}>
-              <SelectTrigger id="reportType" className="w-full">
-                <SelectValue placeholder="Select a report type" />
-              </SelectTrigger>
+            <Select value={reportType} onValueChange={(value: ReportType) => {setReportType(value); setSelectedParty(undefined);}}>
+              <SelectTrigger id="reportType"><SelectValue placeholder="Select a report type" /></SelectTrigger>
               <SelectContent>
-                {reportTypes.map((rt) => (
-                  <SelectItem key={rt.value} value={rt.value}>
-                    <div className="flex items-center gap-2">
-                      <rt.icon className="h-4 w-4" />
-                      {rt.label}
-                    </div>
-                  </SelectItem>
+                {reportTypes.map((group) => (
+                  <SelectGroup key={group.label}>
+                    <Label className="px-2 py-1.5 text-xs font-semibold">{group.label}</Label>
+                    {group.reports.map((rt) => (
+                      <SelectItem key={rt.value} value={rt.value}>
+                        <div className="flex items-center gap-2"><rt.icon className="h-4 w-4" />{rt.label}</div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          { (reportType === 'customer-ledger' || reportType === 'supplier-ledger') && (
+              <div className="space-y-2">
+                <Label htmlFor="party">{reportType === 'customer-ledger' ? 'Customer' : 'Supplier'}</Label>
+                <Select value={selectedParty} onValueChange={setSelectedParty}>
+                  <SelectTrigger id="party"><SelectValue placeholder={`Select a ${reportType === 'customer-ledger' ? 'customer' : 'supplier'}`} /></SelectTrigger>
+                  <SelectContent>
+                    {(reportType === 'customer-ledger' ? mockCustomers : mockSuppliers).map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="startDate">Start Date</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  id="startDate"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !startDate && "text-muted-foreground"
-                  )}
-                >
+                <Button id="startDate" variant={"outline"} className={cn("w-full justify-start text-left font-normal",!startDate && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  initialFocus
-                />
-              </PopoverContent>
+              <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus /></PopoverContent>
             </Popover>
           </div>
           <div className="space-y-2">
             <Label htmlFor="endDate">End Date</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  id="endDate"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !endDate && "text-muted-foreground"
-                  )}
-                >
+                <Button id="endDate" variant={"outline"} className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  initialFocus
-                />
-              </PopoverContent>
+              <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus /></PopoverContent>
             </Popover>
           </div>
         </CardContent>
@@ -158,30 +199,17 @@ export function ReportsClient() {
             <div>
               <CardTitle>Generated Report</CardTitle>
               <CardDescription>
-                {reportTypes.find(rt => rt.value === reportType)?.label} for period {startDate ? format(startDate, "PPP") : ''} - {endDate ? format(endDate, "PPP") : ''}
+                {getReportDetails(reportType)?.label} for period {startDate ? format(startDate, "PPP") : ''} - {endDate ? format(endDate, "PPP") : ''}
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleExport('PDF')} className="shadow-sm hover:shadow-md">
-                <Download className="mr-2 h-4 w-4" /> Export PDF
-              </Button>
-              <Button variant="outline" onClick={() => handleExport('Excel')} className="shadow-sm hover:shadow-md">
-                <Download className="mr-2 h-4 w-4" /> Export Excel
-              </Button>
+              <Button variant="outline" onClick={() => handleExport('PDF')} className="shadow-sm hover:shadow-md"><Download className="mr-2 h-4 w-4" /> Export PDF</Button>
+              <Button variant="outline" onClick={() => handleExport('Excel')} className="shadow-sm hover:shadow-md"><Download className="mr-2 h-4 w-4" /> Export Excel</Button>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="p-4 border rounded-md bg-muted/50 min-h-[200px] whitespace-pre-wrap">
-              {generatedReport.includes("placeholder") ? (
-                 <div className="flex flex-col items-center justify-center text-center">
-                    <Image src="https://placehold.co/400x200.png" data-ai-hint="financial document" alt="Report Placeholder" width={400} height={200} className="rounded-md mb-4 opacity-75" />
-                    <p className="text-muted-foreground font-medium">This is a visual placeholder for your report data.</p>
-                    <p className="text-sm text-muted-foreground mt-1">Actual report data would be displayed here.</p>
-                    <pre className="mt-4 text-xs text-left bg-background p-2 rounded max-w-full overflow-x-auto">{generatedReport}</pre>
-                 </div>
-              ) : (
-                <pre className="text-sm">{generatedReport}</pre>
-              )}
+            <div className="p-4 border rounded-md bg-muted/50 min-h-[200px] whitespace-pre-wrap font-mono text-sm">
+                <pre>{generatedReport}</pre>
             </div>
           </CardContent>
         </Card>

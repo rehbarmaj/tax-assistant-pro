@@ -232,8 +232,8 @@ const Sidebar = React.forwardRef<
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
+            "group-data-[collapsible=icon]:w-[--sidebar-width-icon]",
             "group-data-[collapsible=offcanvas]:w-0",
-            "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
               ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
@@ -265,60 +265,27 @@ const Sidebar = React.forwardRef<
 )
 Sidebar.displayName = "Sidebar"
 
-interface SidebarTriggerProps extends ShadcnButtonProps {}
+const SidebarTrigger = React.forwardRef<
+  HTMLButtonElement,
+  ShadcnButtonProps
+>(({ className, children, ...props }, ref) => {
+  const { toggleSidebar } = useSidebar()
+  const { asChild, ...rest } = props
 
-const SidebarTrigger = React.forwardRef<HTMLButtonElement, SidebarTriggerProps>(
-  ({ children, onClick: parentOnClick, asChild: triggerAsChildProp, variant, size, className, ...restButtonProps }, ref) => {
-    const { toggleSidebar } = useSidebar();
+  const Comp = asChild ? Slot : Button
 
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-      parentOnClick?.(event);
-      if (!event.defaultPrevented) {
-        toggleSidebar();
-      }
-    };
-
-    if (triggerAsChildProp && React.isValidElement(children)) {
-      const childElement = React.Children.only(children) as React.ReactElement<
-        React.ButtonHTMLAttributes<HTMLButtonElement> & { ref?: React.Ref<HTMLButtonElement>; }
-      >;
-
-      const { asChild: _childOwnAsChild, ...childPropsWithoutAsChild } = childElement.props as any;
-      const { asChild: _sidebarTriggerOwnAsChild, ...safeRest } = restButtonProps;
-
-      const clonedProps = {
-        ...childPropsWithoutAsChild,
-        ...safeRest,
-        ref,
-        onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
-          (childElement.props as any).onClick?.(e);
-          if (!e.isDefaultPrevented()) {
-            handleClick(e);
-          }
-        },
-        className: cn(childElement.props.className, className),
-      };
-      return React.cloneElement(childElement, clonedProps);
-    }
-
-    const { asChild: _sidebarTriggerOwnAsChild, ...buttonOnlyProps } = restButtonProps;
-
-    return (
-      <Button
-        ref={ref}
-        data-sidebar="trigger"
-        onClick={handleClick}
-        variant={variant}
-        size={size}
-        className={className}
-        {...buttonOnlyProps}
-      >
-        {children || <PanelLeft />}
-        {(!children || triggerAsChildProp === true ) && <span className="sr-only">Toggle Sidebar</span>}
-      </Button>
-    );
-  }
-);
+  return (
+    <Comp
+      ref={ref}
+      data-sidebar="trigger"
+      onClick={toggleSidebar}
+      className={cn(className)}
+      {...rest}
+    >
+      {children || <PanelLeft />}
+    </Comp>
+  )
+})
 SidebarTrigger.displayName = "SidebarTrigger"
 
 
@@ -569,48 +536,55 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-interface SidebarMenuButtonProps extends React.HTMLAttributes<HTMLElement> {
-    children: React.ReactNode;
-    isActive?: boolean;
-    tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-    variant?: VariantProps<typeof sidebarMenuButtonVariants>['variant'];
-    size?: VariantProps<typeof sidebarMenuButtonVariants>['size'];
-    href?: string;
+type ResolvedSidebarMenuButtonProps =
+  | ({
+      asChild: true
+      children: React.ReactNode
+    } & (
+      | React.ComponentProps<typeof Slot>
+      | Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "asChild">
+      | Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "asChild">
+    ))
+  | ({ asChild?: false } & (
+      | React.ComponentProps<typeof Slot>
+      | React.AnchorHTMLAttributes<HTMLAnchorElement>
+      | React.ButtonHTMLAttributes<HTMLButtonElement>
+    ))
+
+type SidebarMenuButtonProps = ResolvedSidebarMenuButtonProps & {
+  children: React.ReactNode
+  isActive?: boolean
+  tooltip?: string | React.ComponentProps<typeof TooltipContent>
+  variant?: VariantProps<typeof sidebarMenuButtonVariants>["variant"]
+  size?: VariantProps<typeof sidebarMenuButtonVariants>["size"]
 }
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLButtonElement | HTMLAnchorElement,
+  HTMLButtonElement & HTMLAnchorElement,
   SidebarMenuButtonProps
->(({
-  children,
-  isActive = false,
-  tooltip,
-  className,
-  variant,
-  size,
-  href,
-  ...props
-}, ref) => {
+>(({ children, isActive = false, tooltip, className, variant, size, ...props }, ref) => {
   const { isMobile, state } = useSidebar();
+  const { asChild: _thisComponentsAsChildProp, ...restOfAllProps } = props;
+  const { href, ...otherProps } = restOfAllProps as { href?: string; [key: string]: any };
+
+  const { asChild: _ignoredAsChildFromOtherProps, ...domSafeOtherProps } = otherProps;
+
+  const isLink = typeof href === "string";
+  const Comp = _thisComponentsAsChildProp ? Slot : isLink ? "a" : "button";
+
+  const elementProps = {
+    ...domSafeOtherProps,
+    ref,
+    className: cn(sidebarMenuButtonVariants({ variant, size, className })),
+    "data-sidebar": "menu-button",
+    "data-size": size,
+    "data-active": isActive,
+    href,
+  };
   
-  const { asChild, ...restProps } = props as { asChild?: boolean, [key: string]: any };
+  delete (elementProps as { asChild?: any }).asChild;
 
-  const isLink = typeof href === 'string';
-  const Comp = isLink ? 'a' : 'button';
-
-  const element = (
-    <Comp
-      href={href}
-      ref={ref as any}
-      className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-      data-sidebar="menu-button"
-      data-size={size}
-      data-active={isActive}
-      {...restProps}
-    >
-      {children}
-    </Comp>
-  );
+  const element = React.createElement(Comp, elementProps, children);
 
   if (!tooltip) {
     return element;
@@ -618,9 +592,7 @@ const SidebarMenuButton = React.forwardRef<
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        {element}
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{element}</TooltipTrigger>
       <TooltipContent
         side="right"
         align="center"
@@ -630,7 +602,7 @@ const SidebarMenuButton = React.forwardRef<
     </Tooltip>
   );
 });
-SidebarMenuButton.displayName = "SidebarMenuButton";
+SidebarMenuButton.displayName = "SidebarMenuButton"
 
 
 const SidebarMenuAction = React.forwardRef<
