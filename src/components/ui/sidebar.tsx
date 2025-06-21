@@ -538,29 +538,40 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-type SidebarMenuButtonProps = React.ComponentPropsWithoutRef<typeof Link> &
-  VariantProps<typeof sidebarMenuButtonVariants> & {
-    isActive?: boolean
-  }
+type SidebarMenuButtonProps = VariantProps<typeof sidebarMenuButtonVariants> & {
+  className?: string;
+  children?: React.ReactNode;
+  isActive?: boolean;
+  href?: string;
+};
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLAnchorElement,
+  HTMLAnchorElement | HTMLButtonElement,
   SidebarMenuButtonProps
->(({ className, variant, size, children, isActive: isActiveProp, ...props }, ref) => {
-  const pathname = usePathname()
-  const isActive = isActiveProp ?? pathname === props.href
+>(({ className, variant, size, children, isActive: isActiveProp, href, ...props }, ref) => {
+  const pathname = usePathname();
+  const isActive = isActiveProp ?? (href ? pathname === href : false);
+
+  const commonProps = {
+    className: cn(sidebarMenuButtonVariants({ variant, size, className })),
+    "data-active": isActive || undefined,
+    ...props,
+  };
+
+  if (href) {
+    return (
+      <Link href={href} {...commonProps} ref={ref as React.Ref<HTMLAnchorElement>}>
+        {children}
+      </Link>
+    );
+  }
 
   return (
-    <Link
-      ref={ref}
-      className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-      data-active={isActive || undefined}
-      {...props}
-    >
+    <button {...commonProps} ref={ref as React.Ref<HTMLButtonElement>}>
       {children}
-    </Link>
-  )
-})
+    </button>
+  );
+});
 SidebarMenuButton.displayName = "SidebarMenuButton"
 
 const SidebarMenuAction = React.forwardRef<
