@@ -29,6 +29,21 @@ export interface LedgerAccount {
 
 export type ChartOfAccount = ControlGroup | SubControlGroup | LedgerAccount;
 
+// For Client/Vendor Management
+export interface Party {
+  id: string;
+  name: string; // Legal name
+  type: 'Client' | 'Vendor' | 'Both';
+  businessType: string;
+  ntn?: string; // National Tax Number
+  strn?: string; // Sales Tax Registration Number
+  address: string;
+  city: string;
+  province: string;
+  contactPerson?: string;
+  contactNumber?: string;
+  paymentTerms?: string; // e.g., "Net 30"
+}
 
 export interface Product {
   id: string;
@@ -149,5 +164,3 @@ export interface SaleReturnNote extends BaseDocument {
   customerName: string;
   originalSaleNoteNumber: string;
 }
-
-    

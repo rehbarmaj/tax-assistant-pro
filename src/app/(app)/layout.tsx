@@ -30,6 +30,7 @@ import {
   ClipboardList,
   Undo2,
   Redo2,
+  Users,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,6 +43,7 @@ const navItems = [
   { href: '/products', label: 'Products', icon: Package },
   { href: '/tax-rates', label: 'Tax Rates', icon: Percent },
   { href: '/accounts', label: 'Accounts', icon: Landmark },
+  { href: '/parties', label: 'Parties', icon: Users },
   { href: '/purchase-notes', label: 'Purchase Notes', icon: ShoppingCart },
   { href: '/purchase-returns', label: 'Purchase Returns', icon: Undo2 },
   { href: '/sale-notes', label: 'Sale Notes', icon: ClipboardList },
