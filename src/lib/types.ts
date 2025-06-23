@@ -1,6 +1,33 @@
 
 
+// For Chart of Accounts (COA) Module
+export interface ControlGroup {
+  id: string; // e.g., '1'
+  code: string; // e.g., '1'
+  name: 'Assets' | 'Liabilities' | 'Equity' | 'Revenue' | 'Expenses';
+  level: 1;
+}
 
+export interface SubControlGroup {
+  id: string; // e.g., '1.01'
+  code: string; // e.g., '1.01'
+  name: string;
+  controlGroupId: string; // Parent ID
+  level: 2;
+}
+
+export interface LedgerAccount {
+  id: string; // e.g., '1.01.001'
+  code: string; // e.g., '1.01.001'
+  name: string;
+  subControlGroupId: string; // Parent ID
+  balance: number;
+  canPost: boolean; // Direct postings allowed only to ledger accounts
+  level: 3;
+  currency: string; // e.g., 'USD'
+}
+
+export type ChartOfAccount = ControlGroup | SubControlGroup | LedgerAccount;
 
 
 export interface Product {
@@ -33,26 +60,6 @@ export interface EstimatedTaxResult {
   estimatedTax: string;
   isAccurate: boolean;
   additionalDataNeeded?: string;
-}
-
-// For Accounts Module
-export type AccountType =
-  | 'Bank'
-  | 'Cash'
-  | 'Credit Card'
-  | 'Loan'
-  | 'Equity'
-  | 'Asset'
-  | 'Liability';
-
-export interface Account {
-  id: string;
-  name: string;
-  type: AccountType;
-  accountNumber?: string;
-  bankName?: string;
-  balance: number;
-  currency: string; // e.g., 'USD'
 }
 
 // For Voucher Modules
@@ -142,3 +149,5 @@ export interface SaleReturnNote extends BaseDocument {
   customerName: string;
   originalSaleNoteNumber: string;
 }
+
+    
