@@ -19,9 +19,11 @@ type ReportType =
   | 'stock-report' | 'item-wise-sales-purchase'
   | 'profit-and-loss' | 'balance-sheet' | 'trial-balance';
 
+type PartyType = 'customer' | 'supplier' | 'account' | 'product';
+
 const reportTypes: { 
   label: string; 
-  reports: { value: ReportType; label: string; icon: React.ElementType, description?: string, partyType?: 'customer' | 'supplier' | 'account' }[] 
+  reports: { value: ReportType; label: string; icon: React.ElementType, description?: string, partyType?: PartyType }[] 
 }[] = [
   {
     label: "Financial Reports",
@@ -35,7 +37,7 @@ const reportTypes: {
     label: "Ledger & Transaction Reports",
     reports: [
       { value: 'account-ledger', label: 'Account Ledger', icon: Users, description: "Full transaction history for any account.", partyType: 'account' },
-      { value: 'item-ledger', label: 'Item Ledger', icon: PackageSearch, description: "Movement history for a specific inventory item." },
+      { value: 'item-ledger', label: 'Item Ledger', icon: PackageSearch, description: "History for a specific or all items.", partyType: 'product' },
       { value: 'daily-transaction-report', label: 'Daily Transaction Report', icon: FileClock, description: "All transactions for a selected period." },
     ]
   },
@@ -60,6 +62,7 @@ const reportTypes: {
 const mockCustomers = [{ id: '1', name: 'Global Tech Corp' }, { id: '2', name: 'Innovate Solutions' }];
 const mockSuppliers = [{ id: '1', name: 'Office Supplies Inc.' }, { id: '2', name: 'Component Suppliers' }];
 const mockLedgerAccounts = [{id: '1', name: '1.01.001 - Cash'}, {id: '2', name: '4.01.001 - Product Sales'}, { id: '3', name: '1.01.002 - Accounts Receivable' }];
+const mockProducts = [{id: '1', name: 'P001 - Premium Keyboard'}, {id: '2', name: 'P002 - Optical Mouse'}, {id: '3', name: 'P003 - 27-inch Monitor'}];
 
 
 export function ReportsClient() {
@@ -86,13 +89,17 @@ export function ReportsClient() {
     }
     
     let partyInfo = '';
-    if (reportDetails.partyType && selectedParty) {
+    if (reportDetails.partyType) {
+      if (selectedParty) {
         let partyName = '';
         if (reportDetails.partyType === 'customer') partyName = mockCustomers.find(c => c.id === selectedParty)?.name || '';
         if (reportDetails.partyType === 'supplier') partyName = mockSuppliers.find(s => s.id === selectedParty)?.name || '';
         if (reportDetails.partyType === 'account') partyName = mockLedgerAccounts.find(a => a.id === selectedParty)?.name || '';
-        
+        if (reportDetails.partyType === 'product') partyName = mockProducts.find(p => p.id === selectedParty)?.name || '';
         partyInfo = `${reportDetails.label}: ${partyName}`;
+      } else if (reportDetails.partyType === 'product') {
+        partyInfo = `${reportDetails.label}: All Products`;
+      }
     }
 
     const reportContent = `
@@ -174,14 +181,20 @@ Total Credits: ($670.00)
               <div className="space-y-2">
                 <Label htmlFor="party">{
                     currentReportDetails.partyType === 'customer' ? 'Customer' :
-                    currentReportDetails.partyType === 'supplier' ? 'Supplier' : 'Account'
+                    currentReportDetails.partyType === 'supplier' ? 'Supplier' :
+                    currentReportDetails.partyType === 'product' ? 'Product (Optional)' :
+                    'Account'
                 }</Label>
                 <Select value={selectedParty} onValueChange={setSelectedParty}>
-                  <SelectTrigger id="party"><SelectValue placeholder={`Select a ${currentReportDetails.partyType}`} /></SelectTrigger>
+                  <SelectTrigger id="party"><SelectValue placeholder={
+                      currentReportDetails.partyType === 'product' ? 'All Products' : `Select a ${currentReportDetails.partyType}`
+                    } /></SelectTrigger>
                   <SelectContent>
                     {(
                         currentReportDetails.partyType === 'customer' ? mockCustomers :
-                        currentReportDetails.partyType === 'supplier' ? mockSuppliers : mockLedgerAccounts
+                        currentReportDetails.partyType === 'supplier' ? mockSuppliers :
+                        currentReportDetails.partyType === 'product' ? mockProducts :
+                        mockLedgerAccounts
                     ).map(p => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
@@ -244,5 +257,3 @@ Total Credits: ($670.00)
     </div>
   );
 }
-
-    
