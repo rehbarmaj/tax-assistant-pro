@@ -53,8 +53,8 @@ const reportTypes: {
     label: "Receivables & Inventory",
     reports: [
       { value: 'customer-receivables-aging', label: 'Client Receivables (Aging)', icon: Users, description: "Age-wise analysis of outstanding receivables.", partyType: 'customer' },
-      { value: 'stock-report', label: 'Stock Report', icon: PackageSearch, description: "Real-time stock position and valuation." },
-      { value: 'item-wise-sales-purchase', label: 'Item-wise Sales/Purchase', icon: ClipboardCheck, description: "Sales and purchase history for items." },
+      { value: 'stock-report', label: 'Stock Report', icon: PackageSearch, description: "Real-time stock position and valuation.", partyType: 'product' },
+      { value: 'item-wise-sales-purchase', label: 'Item-wise Sales/Purchase', icon: ClipboardCheck, description: "Sales and purchase history for items.", partyType: 'product' },
     ]
   },
 ];
