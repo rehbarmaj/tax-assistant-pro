@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { ControlGroup, SubControlGroup, LedgerAccount, ChartOfAccount } from '@/lib/types';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Accordion,
   AccordionContent,
@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { cn } from '@/lib/utils';
 
 // --- Mock Data ---
 const initialControlGroups: ControlGroup[] = [
@@ -162,9 +163,15 @@ export function AccountsClient() {
                             <span className="font-bold">{cg.code} - {cg.name}</span>
                         </div>
                         <div className="flex items-center gap-2 pr-4">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleOpenDialog(1, undefined, cg); }}><Edit className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleDelete(cg); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                            <Button variant="outline" size="sm" className="h-7" onClick={(e) => { e.stopPropagation(); handleOpenDialog(2, cg.id); }}><PlusCircle className="h-4 w-4 mr-2" />Add Sub-Group</Button>
+                            <div role="button" onClick={(e) => { e.stopPropagation(); handleOpenDialog(1, undefined, cg); }} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-7 w-7")}>
+                                <Edit className="h-4 w-4" />
+                            </div>
+                            <div role="button" onClick={(e) => { e.stopPropagation(); handleDelete(cg); }} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-7 w-7")}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </div>
+                            <div role="button" onClick={(e) => { e.stopPropagation(); handleOpenDialog(2, cg.id); }} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-7")}>
+                                <PlusCircle className="h-4 w-4 mr-2" />Add Sub-Group
+                            </div>
                         </div>
                     </div>
                   </AccordionTrigger>
@@ -179,9 +186,15 @@ export function AccountsClient() {
                                         <span>{scg.code} - {scg.name}</span>
                                     </div>
                                     <div className="flex items-center gap-2 pr-4">
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleOpenDialog(2, cg.id, scg); }}><Edit className="h-4 w-4" /></Button>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleDelete(scg); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                                        <Button variant="outline" size="sm" className="h-7" onClick={(e) => { e.stopPropagation(); handleOpenDialog(3, scg.id); }}><PlusCircle className="h-4 w-4 mr-2" />Add Ledger</Button>
+                                        <div role="button" onClick={(e) => { e.stopPropagation(); handleOpenDialog(2, cg.id, scg); }} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-7 w-7")}>
+                                            <Edit className="h-4 w-4" />
+                                        </div>
+                                        <div role="button" onClick={(e) => { e.stopPropagation(); handleDelete(scg); }} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-7 w-7")}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </div>
+                                        <div role="button" onClick={(e) => { e.stopPropagation(); handleOpenDialog(3, scg.id); }} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-7")}>
+                                            <PlusCircle className="h-4 w-4 mr-2" />Add Ledger
+                                        </div>
                                     </div>
                                 </div>
                             </AccordionTrigger>
@@ -353,5 +366,3 @@ function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroup
     </Dialog>
   );
 }
-
-    
