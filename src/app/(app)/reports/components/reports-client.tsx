@@ -19,7 +19,7 @@ type ReportType =
   | 'stock-report' | 'item-wise-sales-purchase'
   | 'profit-and-loss' | 'balance-sheet' | 'trial-balance';
 
-type PartyType = 'customer' | 'supplier' | 'account' | 'product';
+type PartyType = 'customer' | 'supplier' | 'account' | 'product' | 'accountLevel';
 
 const reportTypes: { 
   label: string; 
@@ -30,7 +30,7 @@ const reportTypes: {
     reports: [
       { value: 'profit-and-loss', label: 'Profit & Loss Account', icon: BarChart3, description: "Summarizes revenues, costs, and expenses." },
       { value: 'balance-sheet', label: 'Balance Sheet', icon: Landmark, description: "Snapshot of assets, liabilities, and equity." },
-      { value: 'trial-balance', label: 'Trial Balance', icon: Scale, description: "Lists all ledger account balances." },
+      { value: 'trial-balance', label: 'Trial Balance', icon: Scale, description: "Lists all ledger account balances.", partyType: 'accountLevel' },
     ]
   },
   {
@@ -70,6 +70,7 @@ export function ReportsClient() {
   const [startDate, setStartDate] = useState<Date | undefined>(new Date(new Date().getFullYear(), 0, 1));
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [selectedParty, setSelectedParty] = useState<string | undefined>(undefined);
+  const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [generatedReport, setGeneratedReport] = useState<string | null>(null);
 
   const getReportDetails = (type?: ReportType) => {
@@ -89,7 +90,16 @@ export function ReportsClient() {
     }
     
     let partyInfo = '';
-    if (reportDetails.partyType) {
+    if (reportDetails.partyType === 'accountLevel') {
+      const levelMap: Record<string, string> = {
+        'all': 'All Levels',
+        '1': 'Level 1: Control Groups',
+        '2': 'Level 2: Sub-Control Groups',
+        '3': 'Level 3: Ledger Accounts',
+      };
+      partyInfo = `Level: ${levelMap[selectedLevel] || 'All Levels'}`;
+    }
+    else if (reportDetails.partyType) {
       if (selectedParty) {
         let partyName = '';
         if (reportDetails.partyType === 'customer') partyName = mockCustomers.find(c => c.id === selectedParty)?.name || '';
@@ -177,7 +187,20 @@ Total Credits: ($670.00)
             </Select>
           </div>
           
-           { currentReportDetails?.partyType && (
+           { currentReportDetails?.partyType === 'accountLevel' ? (
+              <div className="space-y-2">
+                <Label htmlFor="accountLevel">Level</Label>
+                <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                  <SelectTrigger id="accountLevel"><SelectValue placeholder="Select Level" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Levels</SelectItem>
+                    <SelectItem value="1">Level 1: Control Groups</SelectItem>
+                    <SelectItem value="2">Level 2: Sub-Control Groups</SelectItem>
+                    <SelectItem value="3">Level 3: Ledger Accounts</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+           ) : currentReportDetails?.partyType ? (
               <div className="space-y-2">
                 <Label htmlFor="party">{
                     currentReportDetails.partyType === 'customer' ? 'Customer' :
@@ -201,7 +224,7 @@ Total Credits: ($670.00)
                   </SelectContent>
                 </Select>
               </div>
-          )}
+          ): null}
 
           <div className="space-y-2">
             <Label htmlFor="startDate">Start Date</Label>
@@ -257,3 +280,4 @@ Total Credits: ($670.00)
     </div>
   );
 }
+
