@@ -112,7 +112,33 @@ export function ReportsClient() {
       }
     }
 
-    const reportContent = `
+    let reportContent = '';
+
+    if (reportType === 'trial-balance') {
+      reportContent = `
+**Report Type:** ${reportDetails.label}
+**Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
+${partyInfo ? `**${partyInfo}**` : ''}
+
+--- MOCK DATA ---
+
+| Account Name                      | Opening Balance | Period Debit | Period Credit | Closing Balance |
+|-----------------------------------|-----------------|--------------|---------------|-----------------|
+| Cash                              | $50,000.00 Dr.  | $1,500.00    | $800.00       | $50,700.00 Dr.  |
+| Accounts Receivable               | $15,000.00 Dr.  | $10,000.00   | $5,000.00     | $20,000.00 Dr.  |
+| Furniture & Fixtures              | $25,000.00 Dr.  | $0.00        | $0.00         | $25,000.00 Dr.  |
+| Accounts Payable                  | $10,000.00 Cr.  | $2,000.00    | $7,000.00     | $15,000.00 Cr.  |
+| Product Sales                     | $150,000.00 Cr. | $0.00        | $10,000.00    | $160,000.00 Cr. |
+| Rent Expense                      | $20,000.00 Dr.  | $5,000.00    | $0.00         | $25,000.00 Dr.  |
+
+**Totals:**
+                                    |                 | **$18,500.00** | **$22,800.00**  |                 |
+                                    | **Closing Dr: $120,700.00** | | | **Closing Cr: $175,000.00** |
+
+--- End of Mock Data ---
+`;
+    } else {
+      reportContent = `
 **Report Type:** ${reportDetails.label}
 **Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
 ${partyInfo ? `**${partyInfo}**` : ''}
@@ -133,6 +159,7 @@ Total Credits: ($670.00)
 
 --- End of Mock Data ---
     `;
+    }
     setGeneratedReport(reportContent.trim());
   };
   
@@ -280,4 +307,5 @@ Total Credits: ($670.00)
     </div>
   );
 }
+
 
