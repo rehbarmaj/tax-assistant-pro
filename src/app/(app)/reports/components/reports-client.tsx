@@ -11,7 +11,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Download, FileText, BarChart3, PackageSearch, Users, Building, Landmark, ClipboardCheck, Scale, FileClock, Percent } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import Image from 'next/image';
 
 type ReportType = 
   | 'account-ledger' | 'cost-of-sales' | 'daily-transaction-report' | 'item-ledger'
@@ -22,7 +21,7 @@ type ReportType =
 
 const reportTypes: { 
   label: string; 
-  reports: { value: ReportType; label: string; icon: React.ElementType, description?: string, partyType?: 'customer' | 'supplier' }[] 
+  reports: { value: ReportType; label: string; icon: React.ElementType, description?: string, partyType?: 'customer' | 'supplier' | 'account' }[] 
 }[] = [
   {
     label: "Financial Reports",
@@ -35,7 +34,7 @@ const reportTypes: {
   {
     label: "Ledger & Transaction Reports",
     reports: [
-      { value: 'account-ledger', label: 'Account Ledger', icon: Users, description: "Full transaction history for any account.", partyType: 'customer' }, // Simplified to one for demo
+      { value: 'account-ledger', label: 'Account Ledger', icon: Users, description: "Full transaction history for any account.", partyType: 'account' },
       { value: 'item-ledger', label: 'Item Ledger', icon: PackageSearch, description: "Movement history for a specific inventory item." },
       { value: 'daily-transaction-report', label: 'Daily Transaction Report', icon: FileClock, description: "All transactions for a selected period." },
     ]
@@ -51,16 +50,16 @@ const reportTypes: {
    {
     label: "Receivables & Inventory",
     reports: [
-      { value: 'customer-receivables-aging', label: 'Client Receivables (Aging)', icon: Users, description: "Age-wise analysis of outstanding receivables." },
+      { value: 'customer-receivables-aging', label: 'Client Receivables (Aging)', icon: Users, description: "Age-wise analysis of outstanding receivables.", partyType: 'customer' },
       { value: 'stock-report', label: 'Stock Report', icon: PackageSearch, description: "Real-time stock position and valuation." },
       { value: 'item-wise-sales-purchase', label: 'Item-wise Sales/Purchase', icon: ClipboardCheck, description: "Sales and purchase history for items." },
     ]
   },
 ];
 
-const mockCustomers = [{ id: '1', name: 'Global Corp' }, { id: '2', name: 'Innovate LLC' }];
-const mockSuppliers = [{ id: '1', name: 'Tech Supplies Inc.' }, { id: '2', name: 'Office Essentials' }];
-const mockLedgerAccounts = [{id: '1', name: '1.01.001 - Cash'}, {id: '2', name: '4.01.001 - Product Sales'}];
+const mockCustomers = [{ id: '1', name: 'Global Tech Corp' }, { id: '2', name: 'Innovate Solutions' }];
+const mockSuppliers = [{ id: '1', name: 'Office Supplies Inc.' }, { id: '2', name: 'Component Suppliers' }];
+const mockLedgerAccounts = [{id: '1', name: '1.01.001 - Cash'}, {id: '2', name: '4.01.001 - Product Sales'}, { id: '3', name: '1.01.002 - Accounts Receivable' }];
 
 
 export function ReportsClient() {
@@ -88,32 +87,36 @@ export function ReportsClient() {
     
     let partyInfo = '';
     if (reportDetails.partyType && selectedParty) {
-        const partyList = reportDetails.partyType === 'customer' ? mockCustomers : mockSuppliers;
-        partyInfo = `${reportDetails.partyType.charAt(0).toUpperCase() + reportDetails.partyType.slice(1)}: ${partyList.find(c => c.id === selectedParty)?.name}`;
+        let partyName = '';
+        if (reportDetails.partyType === 'customer') partyName = mockCustomers.find(c => c.id === selectedParty)?.name || '';
+        if (reportDetails.partyType === 'supplier') partyName = mockSuppliers.find(s => s.id === selectedParty)?.name || '';
+        if (reportDetails.partyType === 'account') partyName = mockLedgerAccounts.find(a => a.id === selectedParty)?.name || '';
+        
+        partyInfo = `${reportDetails.label}: ${partyName}`;
     }
 
     const reportContent = `
-      **Report Type:** ${reportDetails.label}
-      **Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
-      ${partyInfo ? `**${partyInfo}**` : ''}
-      
-      --- MOCK DATA ---
-      
-      | Date       | Document# | Details                 | Debit     | Credit    | Balance   |
-      |------------|-----------|-------------------------|-----------|-----------|-----------|
-      | 2023-10-01 | SN001     | Sale Note               | $590.00   |           | $590.00   |
-      | 2023-10-05 | RV002     | Receipt from customer   |           | $590.00   | $0.00     |
-      | 2023-10-10 | SN002     | Sale Note               | $120.50   |           | $120.50   |
-      | 2023-10-12 | SRN001    | Sales Return Note       |           | ($80.00)  | $40.50    |
-      
-      **Summary:**
-      Total Debits: $710.50
-      Total Credits: ($670.00)
-      **Closing Balance: $40.50**
-      
-      --- End of Mock Data ---
+**Report Type:** ${reportDetails.label}
+**Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
+${partyInfo ? `**${partyInfo}**` : ''}
+
+--- MOCK DATA ---
+
+| Date       | Document# | Details                 | Debit     | Credit    | Balance   |
+|------------|-----------|-------------------------|-----------|-----------|-----------|
+| 2023-10-01 | SN001     | Sale Note               | $590.00   |           | $590.00   |
+| 2023-10-05 | RV002     | Receipt from customer   |           | $590.00   | $0.00     |
+| 2023-10-10 | SN002     | Sale Note               | $120.50   |           | $120.50   |
+| 2023-10-12 | SRN001    | Sales Return Note       |           | ($80.00)  | $40.50    |
+
+**Summary:**
+Total Debits: $710.50
+Total Credits: ($670.00)
+**Closing Balance: $40.50**
+
+--- End of Mock Data ---
     `;
-    setGeneratedReport(reportContent);
+    setGeneratedReport(reportContent.trim());
   };
   
   const handleExport = (formatType: 'PDF' | 'Excel') => {
@@ -150,7 +153,7 @@ export function ReportsClient() {
         <CardContent className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <div className="space-y-2 lg:col-span-2 xl:col-span-1">
             <Label htmlFor="reportType">Report Type</Label>
-            <Select value={reportType} onValueChange={(value: ReportType) => {setReportType(value); setSelectedParty(undefined);}}>
+            <Select value={reportType} onValueChange={(value: ReportType) => {setReportType(value); setSelectedParty(undefined); setGeneratedReport(null)}}>
               <SelectTrigger id="reportType"><SelectValue placeholder="Select a report type" /></SelectTrigger>
               <SelectContent>
                 {reportTypes.map((group) => (
@@ -166,19 +169,27 @@ export function ReportsClient() {
               </SelectContent>
             </Select>
           </div>
-          { currentReportDetails?.partyType && (
+          
+           { currentReportDetails?.partyType && (
               <div className="space-y-2">
-                <Label htmlFor="party">{currentReportDetails.partyType === 'customer' ? 'Customer' : 'Supplier'}</Label>
+                <Label htmlFor="party">{
+                    currentReportDetails.partyType === 'customer' ? 'Customer' :
+                    currentReportDetails.partyType === 'supplier' ? 'Supplier' : 'Account'
+                }</Label>
                 <Select value={selectedParty} onValueChange={setSelectedParty}>
                   <SelectTrigger id="party"><SelectValue placeholder={`Select a ${currentReportDetails.partyType}`} /></SelectTrigger>
                   <SelectContent>
-                    {(currentReportDetails.partyType === 'customer' ? mockCustomers : mockSuppliers).map(p => (
+                    {(
+                        currentReportDetails.partyType === 'customer' ? mockCustomers :
+                        currentReportDetails.partyType === 'supplier' ? mockSuppliers : mockLedgerAccounts
+                    ).map(p => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
           )}
+
           <div className="space-y-2">
             <Label htmlFor="startDate">Start Date</Label>
             <Popover>
@@ -233,3 +244,5 @@ export function ReportsClient() {
     </div>
   );
 }
+
+    
