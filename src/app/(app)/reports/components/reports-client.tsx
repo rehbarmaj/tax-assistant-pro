@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -68,6 +69,7 @@ const mockCompanyInfo = {
     name: "Tax Assistant Pro Inc.",
     phone: "555-123-4567",
     email: "contact@taxassistantpro.com",
+    logoUrl: "https://placehold.co/100x100.png",
 };
 
 export function ReportsClient() {
@@ -117,20 +119,10 @@ export function ReportsClient() {
       }
     }
 
-    const companyHeader = `
-**${mockCompanyInfo.name}**
-**Phone:** ${mockCompanyInfo.phone} | **Email:** ${mockCompanyInfo.email}
-==================================================
-`;
-
     let reportContent = '';
 
     if (reportType === 'trial-balance') {
-      reportContent = `**Report Type:** ${reportDetails.label}
-**Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
-${partyInfo ? `**${partyInfo}**` : ''}
-
---- MOCK DATA ---
+      reportContent = `--- MOCK DATA ---
 
 | Account Name                      | Opening Balance | Period Debit | Period Credit | Closing Balance |
 |-----------------------------------|-----------------|--------------|---------------|-----------------|
@@ -148,11 +140,7 @@ ${partyInfo ? `**${partyInfo}**` : ''}
 --- End of Mock Data ---
 `;
     } else {
-      reportContent = `**Report Type:** ${reportDetails.label}
-**Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
-${partyInfo ? `**${partyInfo}**` : ''}
-
---- MOCK DATA ---
+      reportContent = `--- MOCK DATA ---
 
 | Date       | Document# | Details                 | Debit     | Credit    | Balance   |
 |------------|-----------|-------------------------|-----------|-----------|-----------|
@@ -169,7 +157,7 @@ Total Credits: ($670.00)
 --- End of Mock Data ---
     `;
     }
-    setGeneratedReport(`${companyHeader}\n${reportContent}`.trim());
+    setGeneratedReport(reportContent.trim());
   };
   
   const handleExport = (formatType: 'PDF' | 'Excel') => {
@@ -177,8 +165,20 @@ Total Credits: ($670.00)
       alert('Please generate a report first.');
       return;
     }
-    // Mock file download
-    const blob = new Blob([generatedReport], { type: 'text/plain' });
+    
+    const reportDetails = getReportDetails(reportType);
+    const textHeader = `
+Company: ${mockCompanyInfo.name}
+Phone: ${mockCompanyInfo.phone}
+Email: ${mockCompanyInfo.email}
+
+Report: ${reportDetails?.label}
+Period: ${startDate ? format(startDate, "PPP") : ''} - ${endDate ? format(endDate, "PPP") : ''}
+==================================================
+`;
+    
+    const exportContent = `${textHeader}\n${generatedReport}`;
+    const blob = new Blob([exportContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -307,8 +307,24 @@ Total Credits: ($670.00)
             </div>
           </CardHeader>
           <CardContent>
-            <div className="p-4 border rounded-md bg-muted/50 min-h-[200px] whitespace-pre-wrap font-mono text-sm">
-                <pre>{generatedReport}</pre>
+            <div className="p-4 border rounded-md bg-muted/50 min-h-[200px] font-mono text-sm">
+                <div className="flex items-start justify-between mb-4 pb-4 border-b border-border/50">
+                    <div className="flex items-center gap-4">
+                        <Image src={mockCompanyInfo.logoUrl} alt="Company Logo" width={80} height={80} className="rounded-md" data-ai-hint="company logo"/>
+                        <div>
+                            <h3 className="text-lg font-bold">{mockCompanyInfo.name}</h3>
+                            <p className="text-xs">Phone: {mockCompanyInfo.phone}</p>
+                            <p className="text-xs">Email: {mockCompanyInfo.email}</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                      <h4 className="font-bold">{getReportDetails(reportType)?.label}</h4>
+                      <p className="text-xs">
+                          For the period: {startDate ? format(startDate, "PPP") : ''} to {endDate ? format(endDate, "PPP") : ''}
+                      </p>
+                    </div>
+                </div>
+                <pre className="whitespace-pre-wrap">{generatedReport}</pre>
             </div>
           </CardContent>
         </Card>
