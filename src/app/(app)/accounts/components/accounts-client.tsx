@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import type { ControlGroup, SubControlGroup, LedgerAccount, ChartOfAccount } from '@/lib/types';
+import type { ControlGroup, SubControlGroup, ControlAccount, LedgerAccount, ChartOfAccount } from '@/lib/types';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Accordion,
@@ -48,13 +48,22 @@ const initialSubControlGroups: SubControlGroup[] = [
     { id: '5.02', code: '5.02', name: 'Operating Expenses', controlGroupId: '5', level: 2 },
 ];
 
+const initialControlAccounts: ControlAccount[] = [
+    { id: '1.01.1', code: '1.01.1', name: 'Debtors', subControlGroupId: '1.01', level: 3 },
+    { id: '1.01.2', code: '1.01.2', name: 'Cash & Bank', subControlGroupId: '1.01', level: 3 },
+    { id: '1.02.1', code: '1.02.1', name: 'Furniture & Fixtures', subControlGroupId: '1.02', level: 3 },
+    { id: '2.01.1', code: '2.01.1', name: 'Creditors', subControlGroupId: '2.01', level: 3 },
+    { id: '4.01.1', code: '4.01.1', name: 'Product Sales', subControlGroupId: '4.01', level: 3 },
+    { id: '5.02.1', code: '5.02.1', name: 'General & Admin Expenses', subControlGroupId: '5.02', level: 3 },
+];
+
 const initialLedgerAccounts: LedgerAccount[] = [
-    { id: '1.01.001', code: '1.01.001', name: 'Cash', subControlGroupId: '1.01', balance: 50000, canPost: true, level: 3, currency: 'USD' },
-    { id: '1.01.002', code: '1.01.002', name: 'Accounts Receivable', subControlGroupId: '1.01', balance: 15000, canPost: true, level: 3, currency: 'USD', ntn: '1234567-8', strn: '9876543210', address: '123 Tech Park', city: 'Metropolis', province: 'Central Province', contactPerson: 'John Smith', contactNumber: '555-1234', paymentTerms: 'Net 30' },
-    { id: '1.02.001', code: '1.02.001', name: 'Furniture & Fixtures', subControlGroupId: '1.02', balance: 25000, canPost: true, level: 3, currency: 'USD' },
-    { id: '2.01.001', code: '2.01.001', name: 'Accounts Payable', subControlGroupId: '2.01', balance: -10000, canPost: true, level: 3, currency: 'USD', ntn: '8765432-1', strn: '0123456789', address: '456 Supply Ave', city: 'Gotham', province: 'North Province', contactPerson: 'Jane Doe', contactNumber: '555-5678', paymentTerms: 'Net 60' },
-    { id: '4.01.001', code: '4.01.001', name: 'Product Sales', subControlGroupId: '4.01', balance: -150000, canPost: true, level: 3, currency: 'USD' },
-    { id: '5.02.001', code: '5.02.001', name: 'Rent Expense', subControlGroupId: '5.02', balance: 20000, canPost: true, level: 3, currency: 'USD' },
+    { id: '1.01.2.001', code: '1.01.2.001', name: 'Cash on Hand', controlAccountId: '1.01.2', balance: 50000, canPost: true, level: 4, currency: 'USD' },
+    { id: '1.01.1.001', code: '1.01.1.001', name: 'Client A', controlAccountId: '1.01.1', balance: 15000, canPost: true, level: 4, currency: 'USD', ntn: '1234567-8', strn: '9876543210', address: '123 Tech Park', city: 'Metropolis', province: 'Central Province', contactPerson: 'John Smith', contactNumber: '555-1234', paymentTerms: 'Net 30' },
+    { id: '1.02.1.001', code: '1.02.1.001', name: 'Office Furniture', controlAccountId: '1.02.1', balance: 25000, canPost: true, level: 4, currency: 'USD' },
+    { id: '2.01.1.001', code: '2.01.1.001', name: 'Vendor B', controlAccountId: '2.01.1', balance: -10000, canPost: true, level: 4, currency: 'USD', ntn: '8765432-1', strn: '0123456789', address: '456 Supply Ave', city: 'Gotham', province: 'North Province', contactPerson: 'Jane Doe', contactNumber: '555-5678', paymentTerms: 'Net 60' },
+    { id: '4.01.1.001', code: '4.01.1.001', name: 'Domestic Sales', controlAccountId: '4.01.1', balance: -150000, canPost: true, level: 4, currency: 'USD' },
+    { id: '5.02.1.001', code: '5.02.1.001', name: 'Rent Expense', controlAccountId: '5.02.1', balance: 20000, canPost: true, level: 4, currency: 'USD' },
 ];
 // --- End Mock Data ---
 
@@ -65,23 +74,25 @@ const formatCurrency = (amount: number, currencyCode: string = 'USD') => {
 export function AccountsClient() {
   const [controlGroups, setControlGroups] = useState<ControlGroup[]>([]);
   const [subControlGroups, setSubControlGroups] = useState<SubControlGroup[]>([]);
+  const [controlAccounts, setControlAccounts] = useState<ControlAccount[]>([]);
   const [ledgerAccounts, setLedgerAccounts] = useState<LedgerAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<ChartOfAccount | null>(null);
-  const [dialogContext, setDialogContext] = useState<{ level: 1 | 2 | 3, parentId?: string } | null>(null);
+  const [dialogContext, setDialogContext] = useState<{ level: 1 | 2 | 3 | 4, parentId?: string } | null>(null);
 
   useEffect(() => {
     // Simulate API call
     setTimeout(() => {
       setControlGroups(initialControlGroups);
       setSubControlGroups(initialSubControlGroups);
+      setControlAccounts(initialControlAccounts);
       setLedgerAccounts(initialLedgerAccounts);
       setIsLoading(false);
     }, 1000);
   }, []);
 
-  const handleOpenDialog = (level: 1 | 2 | 3, parentId?: string, accountToEdit?: ChartOfAccount) => {
+  const handleOpenDialog = (level: 1 | 2 | 3 | 4, parentId?: string, accountToEdit?: ChartOfAccount) => {
     setEditingAccount(accountToEdit || null);
     setDialogContext({ level, parentId });
     setIsDialogOpen(true);
@@ -93,20 +104,32 @@ export function AccountsClient() {
     }
 
     if (account.level === 1) {
-      // Cascading delete: also delete associated sub-control groups and their ledger accounts
+      // Cascading delete
       const subGroupsToDelete = subControlGroups.filter(scg => scg.controlGroupId === account.id);
       const subGroupIdsToDelete = subGroupsToDelete.map(scg => scg.id);
+      const controlAccountsToDelete = controlAccounts.filter(ca => subGroupIdsToDelete.includes(ca.subControlGroupId));
+      const controlAccountIdsToDelete = controlAccountsToDelete.map(ca => ca.id);
       
-      setLedgerAccounts(las => las.filter(la => !subGroupIdsToDelete.includes(la.subControlGroupId)));
+      setLedgerAccounts(las => las.filter(la => !controlAccountIdsToDelete.includes(la.controlAccountId)));
+      setControlAccounts(cas => cas.filter(ca => !subGroupIdsToDelete.includes(ca.subControlGroupId)));
       setSubControlGroups(scgs => scgs.filter(scg => scg.controlGroupId !== account.id));
       setControlGroups(cgs => cgs.filter(cg => cg.id !== account.id));
 
     } else if (account.level === 2) {
-      // Cascading delete: also delete associated ledger accounts
-      setLedgerAccounts(las => las.filter(la => la.subControlGroupId !== account.id));
+      // Cascading delete
+      const controlAccountsToDelete = controlAccounts.filter(ca => ca.subControlGroupId === account.id);
+      const controlAccountIdsToDelete = controlAccountsToDelete.map(ca => ca.id);
+      
+      setLedgerAccounts(las => las.filter(la => !controlAccountIdsToDelete.includes(la.controlAccountId)));
+      setControlAccounts(cas => cas.filter(ca => ca.subControlGroupId !== account.id));
       setSubControlGroups(scgs => scgs.filter(scg => scg.id !== account.id));
 
     } else if (account.level === 3) {
+      // Cascading delete
+      setLedgerAccounts(las => las.filter(la => la.controlAccountId !== account.id));
+      setControlAccounts(cas => cas.filter(ca => ca.id !== account.id));
+
+    } else if (account.level === 4) {
       // Just delete the ledger account
       setLedgerAccounts(las => las.filter(la => la.id !== account.id));
     }
@@ -118,6 +141,8 @@ export function AccountsClient() {
         setControlGroups(cgs => cgs.map(cg => cg.id === accountData.id ? accountData as ControlGroup : cg));
       } else if (accountData.level === 2) {
         setSubControlGroups(scgs => scgs.map(scg => scg.id === accountData.id ? accountData as SubControlGroup : scg));
+      } else if (accountData.level === 3) {
+        setControlAccounts(cas => cas.map(ca => ca.id === accountData.id ? accountData as ControlAccount : ca));
       } else {
         setLedgerAccounts(las => las.map(la => la.id === accountData.id ? accountData as LedgerAccount : la));
       }
@@ -127,6 +152,8 @@ export function AccountsClient() {
         setControlGroups(cgs => [...cgs, newAccount as ControlGroup]);
       } else if (newAccount.level === 2) {
         setSubControlGroups(scgs => [...scgs, newAccount as SubControlGroup]);
+      } else if (newAccount.level === 3) {
+        setControlAccounts(cas => [...cas, newAccount as ControlAccount]);
       } else {
         setLedgerAccounts(las => [...las, { ...newAccount, balance: 0, currency: 'USD' } as LedgerAccount]);
       }
@@ -197,27 +224,54 @@ export function AccountsClient() {
                                             <Trash2 className="h-4 w-4 text-destructive" />
                                         </div>
                                         <div role="button" onClick={(e) => { e.stopPropagation(); handleOpenDialog(3, scg.id); }} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-7")}>
-                                            <PlusCircle className="h-4 w-4 mr-2" />Add Ledger
+                                            <PlusCircle className="h-4 w-4 mr-2" />Add Control A/C
                                         </div>
                                     </div>
                                 </div>
                             </AccordionTrigger>
-                           <AccordionContent className="pl-6 border-l-2 border-secondary/20 ml-3 py-2 space-y-1">
-                                {ledgerAccounts.filter(la => la.subControlGroupId === scg.id).sort((a,b) => a.code.localeCompare(b.code)).map(la => (
-                                    <div key={la.id} className="flex items-center justify-between w-full p-2 rounded-md hover:bg-muted/50">
-                                        <div className="flex items-center gap-2">
-                                            <FileText className="h-5 w-5 text-muted-foreground" />
-                                            <span>{la.code} - {la.name}</span>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <span className="font-mono text-sm">{formatCurrency(la.balance, la.currency)}</span>
-                                            <div className="flex items-center gap-2">
-                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenDialog(3, scg.id, la)}><Edit className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(la)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                           <AccordionContent className="pl-6 border-l-2 border-secondary/20 ml-3">
+                             <Accordion type="multiple" className="w-full">
+                                {controlAccounts.filter(ca => ca.subControlGroupId === scg.id).sort((a,b) => a.code.localeCompare(b.code)).map(ca => (
+                                    <AccordionItem value={ca.id} key={ca.id} className="border-b-0">
+                                        <AccordionTrigger className="hover:bg-muted/50 px-2 rounded-md">
+                                            <div className="flex items-center justify-between w-full">
+                                                <div className="flex items-center gap-2">
+                                                    <Folder className="h-5 w-5 text-accent/80" />
+                                                    <span>{ca.code} - {ca.name}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 pr-4">
+                                                    <div role="button" onClick={(e) => { e.stopPropagation(); handleOpenDialog(3, scg.id, ca); }} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-7 w-7")}>
+                                                        <Edit className="h-4 w-4" />
+                                                    </div>
+                                                    <div role="button" onClick={(e) => { e.stopPropagation(); handleDelete(ca); }} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-7 w-7")}>
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </div>
+                                                    <div role="button" onClick={(e) => { e.stopPropagation(); handleOpenDialog(4, ca.id); }} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-7")}>
+                                                        <PlusCircle className="h-4 w-4 mr-2" />Add Ledger
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="pl-6 border-l-2 border-accent/20 ml-3 py-2 space-y-1">
+                                            {ledgerAccounts.filter(la => la.controlAccountId === ca.id).sort((a,b) => a.code.localeCompare(b.code)).map(la => (
+                                                <div key={la.id} className="flex items-center justify-between w-full p-2 rounded-md hover:bg-muted/50">
+                                                    <div className="flex items-center gap-2">
+                                                        <FileText className="h-5 w-5 text-muted-foreground" />
+                                                        <span>{la.code} - {la.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="font-mono text-sm">{formatCurrency(la.balance, la.currency)}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenDialog(4, ca.id, la)}><Edit className="h-4 w-4" /></Button>
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(la)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </AccordionContent>
+                                    </AccordionItem>
                                 ))}
+                             </Accordion>
                            </AccordionContent>
                         </AccordionItem>
                       ))}
@@ -239,6 +293,7 @@ export function AccountsClient() {
           context={dialogContext!}
           controlGroups={controlGroups}
           subControlGroups={subControlGroups}
+          controlAccounts={controlAccounts}
         />
       )}
     </div>
@@ -250,12 +305,13 @@ interface AccountDialogProps {
   onClose: () => void;
   onSave: (accountData: ChartOfAccount) => void;
   account: ChartOfAccount | null;
-  context: { level: 1 | 2 | 3, parentId?: string };
+  context: { level: 1 | 2 | 3 | 4, parentId?: string };
   controlGroups: ControlGroup[];
   subControlGroups: SubControlGroup[];
+  controlAccounts: ControlAccount[];
 }
 
-function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroups, subControlGroups }: AccountDialogProps) {
+function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroups, subControlGroups, controlAccounts }: AccountDialogProps) {
   const [formData, setFormData] = useState<Partial<ChartOfAccount>>({});
 
   useEffect(() => {
@@ -273,7 +329,10 @@ function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroup
             (baseData as Partial<SubControlGroup>).controlGroupId = context.parentId;
         }
         if (context.level === 3 && context.parentId) {
-            (baseData as Partial<LedgerAccount>).subControlGroupId = context.parentId;
+            (baseData as Partial<ControlAccount>).subControlGroupId = context.parentId;
+        }
+        if (context.level === 4 && context.parentId) {
+            (baseData as Partial<LedgerAccount>).controlAccountId = context.parentId;
             (baseData as Partial<LedgerAccount>).canPost = true;
         }
         setFormData(baseData);
@@ -303,7 +362,8 @@ function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroup
       const action = account ? 'Edit' : 'Add New';
       if(context.level === 1) return `${action} Control Group`;
       if(context.level === 2) return `${action} Sub-Control Group`;
-      if(context.level === 3) return `${action} Ledger Account`;
+      if(context.level === 3) return `${action} Control Account`;
+      if(context.level === 4) return `${action} Ledger Account`;
   }
 
   return (
@@ -318,15 +378,15 @@ function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroup
         <form onSubmit={handleSubmit}>
           <ScrollArea className="max-h-[70vh] p-1">
           <div className="grid gap-4 py-4 px-4">
-            { (context.level === 2 || context.level === 3) && (
+            { (context.level > 1) && (
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Parent Group</Label>
                     <div className="col-span-3">
                         <Input 
                             value={
-                                context.level === 2 
-                                ? controlGroups.find(cg => cg.id === (formData as SubControlGroup).controlGroupId)?.name
-                                : subControlGroups.find(scg => scg.id === (formData as LedgerAccount).subControlGroupId)?.name
+                                context.level === 2 ? controlGroups.find(cg => cg.id === (formData as SubControlGroup).controlGroupId)?.name :
+                                context.level === 3 ? subControlGroups.find(scg => scg.id === (formData as ControlAccount).subControlGroupId)?.name :
+                                context.level === 4 ? controlAccounts.find(ca => ca.id === (formData as LedgerAccount).controlAccountId)?.name : ''
                             } 
                             disabled 
                         />
@@ -341,7 +401,7 @@ function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroup
               <Label htmlFor="name" className="text-right">Name</Label>
               <Input id="name" name="name" value={formData.name || ''} onChange={handleChange} className="col-span-3" required />
             </div>
-            { context.level === 3 && (
+            { context.level === 4 && (
                 <>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="balance" className="text-right">Opening Balance</Label>

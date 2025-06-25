@@ -16,14 +16,22 @@ export interface SubControlGroup {
   level: 2;
 }
 
-export interface LedgerAccount {
-  id: string; // e.g., '1.01.001'
-  code: string; // e.g., '1.01.001'
+export interface ControlAccount {
+  id: string; // e.g., '1.01.1'
+  code: string; // e.g., '1.01.1'
   name: string;
   subControlGroupId: string; // Parent ID
+  level: 3;
+}
+
+export interface LedgerAccount {
+  id: string; // e.g., '1.01.1.001'
+  code: string; // e.g., '1.01.1.001'
+  name: string;
+  controlAccountId: string; // Parent ID
   balance: number;
   canPost: boolean; // Direct postings allowed only to ledger accounts
-  level: 3;
+  level: 4;
   currency: string; // e.g., 'USD'
   // Optional party information
   ntn?: string; 
@@ -36,7 +44,7 @@ export interface LedgerAccount {
   paymentTerms?: string;
 }
 
-export type ChartOfAccount = ControlGroup | SubControlGroup | LedgerAccount;
+export type ChartOfAccount = ControlGroup | SubControlGroup | ControlAccount | LedgerAccount;
 
 export interface Product {
   id: string;

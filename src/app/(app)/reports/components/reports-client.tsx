@@ -62,7 +62,7 @@ const reportTypes: {
 
 const mockCustomers = [{ id: '1', name: 'Global Tech Corp' }, { id: '2', name: 'Innovate Solutions' }];
 const mockSuppliers = [{ id: '1', name: 'Office Supplies Inc.' }, { id: '2', name: 'Component Suppliers' }];
-const mockLedgerAccounts = [{id: '1', name: '1.01.001 - Cash'}, {id: '2', name: '4.01.001 - Product Sales'}, { id: '3', name: '1.01.002 - Accounts Receivable' }, {id: '4', name: '2.01.001 - Accounts Payable'}];
+const mockLedgerAccounts = [{id: '1', name: '1.01.2.001 - Cash on Hand'}, {id: '2', name: '4.01.1.001 - Domestic Sales'}, { id: '3', name: '1.01.1.001 - Client A' }, {id: '4', name: '2.01.1.001 - Vendor B'}];
 const mockProducts = [{id: '1', name: 'P001 - Premium Keyboard'}, {id: '2', name: 'P002 - Optical Mouse'}, {id: '3', name: 'P003 - 27-inch Monitor'}];
 const mockCities = ["Metropolis", "Gotham", "Star City"];
 
@@ -104,7 +104,8 @@ export function ReportsClient() {
         'all': 'All Levels',
         '1': 'Level 1: Control Groups',
         '2': 'Level 2: Sub-Control Groups',
-        '3': 'Level 3: Ledger Accounts',
+        '3': 'Level 3: Control Accounts',
+        '4': 'Level 4: Ledger Accounts'
       };
       partyInfo = `Level: ${levelMap[selectedLevel] || 'All Levels'}`;
     }
@@ -249,7 +250,8 @@ Period: ${startDate ? format(startDate, "PPP") : ''} - ${endDate ? format(endDat
                     <SelectItem value="all">All Levels</SelectItem>
                     <SelectItem value="1">Level 1: Control Groups</SelectItem>
                     <SelectItem value="2">Level 2: Sub-Control Groups</SelectItem>
-                    <SelectItem value="3">Level 3: Ledger Accounts</SelectItem>
+                    <SelectItem value="3">Level 3: Control Accounts</SelectItem>
+                    <SelectItem value="4">Level 4: Ledger Accounts</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -325,36 +327,30 @@ Period: ${startDate ? format(startDate, "PPP") : ''} - ${endDate ? format(endDat
 
       {generatedReport && (
         <Card className="shadow-xl animate-in fade-in duration-500">
-          <CardHeader className="flex flex-row justify-between items-center">
-            <div>
-              <CardTitle>Generated Report</CardTitle>
-              <CardDescription>
-                {getReportDetails(reportType)?.label} for period {startDate ? format(startDate, "PPP") : ''} - {endDate ? format(endDate, "PPP") : ''}
-              </CardDescription>
+          <CardHeader>
+             <div className="flex items-start justify-between mb-4 pb-4 border-b border-border/50">
+                <div className="flex items-center gap-4">
+                    <Image src={mockCompanyInfo.logoUrl} alt="Company Logo" width={80} height={80} className="rounded-md" data-ai-hint="company logo"/>
+                    <div>
+                        <h3 className="text-lg font-bold">{mockCompanyInfo.name}</h3>
+                        <p className="text-xs text-muted-foreground">Phone: {mockCompanyInfo.phone}</p>
+                        <p className="text-xs text-muted-foreground">Email: {mockCompanyInfo.email}</p>
+                    </div>
+                </div>
+                <div className="text-right">
+                  <h4 className="font-bold text-lg">{getReportDetails(reportType)?.label}</h4>
+                  <p className="text-xs text-muted-foreground">
+                      For the period: {startDate ? format(startDate, "PPP") : ''} to {endDate ? format(endDate, "PPP") : ''}
+                  </p>
+                </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => handleExport('PDF')} className="shadow-sm hover:shadow-md"><Download className="mr-2 h-4 w-4" /> Export PDF</Button>
               <Button variant="outline" onClick={() => handleExport('Excel')} className="shadow-sm hover:shadow-md"><Download className="mr-2 h-4 w-4" /> Export Excel</Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="p-4 border rounded-md bg-muted/50 min-h-[200px] font-mono text-sm">
-                <div className="flex items-start justify-between mb-4 pb-4 border-b border-border/50">
-                    <div className="flex items-center gap-4">
-                        <Image src={mockCompanyInfo.logoUrl} alt="Company Logo" width={80} height={80} className="rounded-md" data-ai-hint="company logo"/>
-                        <div>
-                            <h3 className="text-lg font-bold">{mockCompanyInfo.name}</h3>
-                            <p className="text-xs">Phone: {mockCompanyInfo.phone}</p>
-                            <p className="text-xs">Email: {mockCompanyInfo.email}</p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                      <h4 className="font-bold">{getReportDetails(reportType)?.label}</h4>
-                      <p className="text-xs">
-                          For the period: {startDate ? format(startDate, "PPP") : ''} to {endDate ? format(endDate, "PPP") : ''}
-                      </p>
-                    </div>
-                </div>
                 <pre className="whitespace-pre-wrap">{generatedReport}</pre>
             </div>
           </CardContent>
