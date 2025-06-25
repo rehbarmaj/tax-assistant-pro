@@ -164,3 +164,24 @@ export interface SaleReturnNote extends BaseDocument {
   customerName: string;
   originalSaleNoteNumber: string;
 }
+
+// For User Rights Management
+export type Permission = 'view' | 'add' | 'edit' | 'delete';
+export type AppModule = 
+  | 'products' | 'tax-rates' | 'accounts' | 'parties'
+  | 'purchase-notes' | 'purchase-returns' | 'sale-notes' | 'sales-returns'
+  | 'payment-vouchers' | 'receipt-vouchers' | 'journal-vouchers'
+  | 'reports' | 'user-rights';
+
+export interface UserPermission {
+  module: AppModule;
+  rights: Set<Permission>;
+}
+
+export interface User {
+  id: string; // e.g., 'user-1'
+  userId: string; // The display ID, e.g., 'EMP001'
+  login: string; // The login name, e.g., 'john.doe'
+  passwordHash: string; // Should always be a hash
+  permissions: UserPermission[];
+}

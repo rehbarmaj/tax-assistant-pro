@@ -31,6 +31,7 @@ import {
   Undo2,
   Redo2,
   Users,
+  ShieldCheck,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -53,6 +54,7 @@ const navItems = [
   { href: '/journal-vouchers', label: 'Journal Vouchers', icon: BookCopy },
   { href: '/income-tax-estimator', label: 'Income Tax Estimator', icon: Calculator },
   { href: '/reports', label: 'Reports', icon: FileText },
+  { href: '/user-rights', label: 'User Rights', icon: ShieldCheck },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
