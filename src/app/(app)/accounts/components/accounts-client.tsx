@@ -25,8 +25,10 @@ import { PlusCircle, Edit, Trash2, Landmark, Folder, FileText } from 'lucide-rea
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from '@/components/ui/separator';
 import { Switch } from "@/components/ui/switch";
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- Mock Data ---
 const initialControlGroups: ControlGroup[] = [
@@ -48,9 +50,9 @@ const initialSubControlGroups: SubControlGroup[] = [
 
 const initialLedgerAccounts: LedgerAccount[] = [
     { id: '1.01.001', code: '1.01.001', name: 'Cash', subControlGroupId: '1.01', balance: 50000, canPost: true, level: 3, currency: 'USD' },
-    { id: '1.01.002', code: '1.01.002', name: 'Accounts Receivable', subControlGroupId: '1.01', balance: 15000, canPost: true, level: 3, currency: 'USD' },
+    { id: '1.01.002', code: '1.01.002', name: 'Accounts Receivable', subControlGroupId: '1.01', balance: 15000, canPost: true, level: 3, currency: 'USD', ntn: '1234567-8', strn: '9876543210', address: '123 Tech Park', city: 'Metropolis', province: 'Central Province', contactPerson: 'John Smith', contactNumber: '555-1234', paymentTerms: 'Net 30' },
     { id: '1.02.001', code: '1.02.001', name: 'Furniture & Fixtures', subControlGroupId: '1.02', balance: 25000, canPost: true, level: 3, currency: 'USD' },
-    { id: '2.01.001', code: '2.01.001', name: 'Accounts Payable', subControlGroupId: '2.01', balance: -10000, canPost: true, level: 3, currency: 'USD' },
+    { id: '2.01.001', code: '2.01.001', name: 'Accounts Payable', subControlGroupId: '2.01', balance: -10000, canPost: true, level: 3, currency: 'USD', ntn: '8765432-1', strn: '0123456789', address: '456 Supply Ave', city: 'Gotham', province: 'North Province', contactPerson: 'Jane Doe', contactNumber: '555-5678', paymentTerms: 'Net 60' },
     { id: '4.01.001', code: '4.01.001', name: 'Product Sales', subControlGroupId: '4.01', balance: -150000, canPost: true, level: 3, currency: 'USD' },
     { id: '5.02.001', code: '5.02.001', name: 'Rent Expense', subControlGroupId: '5.02', balance: 20000, canPost: true, level: 3, currency: 'USD' },
 ];
@@ -304,7 +306,7 @@ function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroup
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[525px] shadow-xl">
+      <DialogContent className="sm:max-w-2xl shadow-xl">
         <DialogHeader>
           <DialogTitle>{getDialogTitle()}</DialogTitle>
           <DialogDescription>
@@ -312,7 +314,8 @@ function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroup
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+          <ScrollArea className="max-h-[70vh] p-1">
+          <div className="grid gap-4 py-4 px-4">
             { (context.level === 2 || context.level === 3) && (
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Parent Group</Label>
@@ -348,13 +351,50 @@ function AccountDialog({ isOpen, onClose, onSave, account, context, controlGroup
                         id="canPost"
                         checked={(formData as LedgerAccount).canPost}
                         onCheckedChange={(checked) => setFormData(prev => ({ ...prev, canPost: checked }))}
-                        className="col-span-3"
                     />
+                </div>
+                
+                <Separator className="my-4" />
+                <h4 className="font-semibold text-lg col-span-4">Party Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="ntn">NTN (Income Tax #)</Label>
+                        <Input id="ntn" name="ntn" value={(formData as LedgerAccount).ntn || ''} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="strn">STRN (Sales Tax #)</Label>
+                        <Input id="strn" name="strn" value={(formData as LedgerAccount).strn || ''} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="address">Address</Label>
+                        <Input id="address" name="address" value={(formData as LedgerAccount).address || ''} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="city">City</Label>
+                        <Input id="city" name="city" value={(formData as LedgerAccount).city || ''} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="province">Province/State</Label>
+                        <Input id="province" name="province" value={(formData as LedgerAccount).province || ''} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="contactPerson">Contact Person</Label>
+                        <Input id="contactPerson" name="contactPerson" value={(formData as LedgerAccount).contactPerson || ''} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="contactNumber">Contact Number</Label>
+                        <Input id="contactNumber" name="contactNumber" value={(formData as LedgerAccount).contactNumber || ''} onChange={handleChange} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="paymentTerms">Payment Terms</Label>
+                        <Input id="paymentTerms" name="paymentTerms" value={(formData as LedgerAccount).paymentTerms || ''} onChange={handleChange} placeholder="e.g., Net 30" />
+                    </div>
                 </div>
                 </>
             )}
 
           </div>
+          </ScrollArea>
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>

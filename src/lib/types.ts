@@ -25,25 +25,18 @@ export interface LedgerAccount {
   canPost: boolean; // Direct postings allowed only to ledger accounts
   level: 3;
   currency: string; // e.g., 'USD'
+  // Optional party information
+  ntn?: string; 
+  strn?: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  contactPerson?: string;
+  contactNumber?: string;
+  paymentTerms?: string;
 }
 
 export type ChartOfAccount = ControlGroup | SubControlGroup | LedgerAccount;
-
-// For Client/Vendor Management
-export interface Party {
-  id: string;
-  name: string; // Legal name
-  type: 'Client' | 'Vendor' | 'Both';
-  businessType: string;
-  ntn?: string; // National Tax Number
-  strn?: string; // Sales Tax Registration Number
-  address: string;
-  city: string;
-  province: string;
-  contactPerson?: string;
-  contactNumber?: string;
-  paymentTerms?: string; // e.g., "Net 30"
-}
 
 export interface Product {
   id: string;

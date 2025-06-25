@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 type ReportType = 
   | 'account-ledger' | 'cost-of-sales' | 'daily-transaction-report' | 'item-ledger'
   | 'sales-tax-register' | 'purchase-tax-register' | 'tax-summary'
-  | 'customer-receivables-aging'
+  | 'debtor-creditor-aging'
   | 'stock-report' | 'item-wise-sales-purchase'
   | 'profit-and-loss' | 'balance-sheet' | 'trial-balance';
 
@@ -24,7 +24,7 @@ type PartyType = 'customer' | 'supplier' | 'account' | 'product' | 'accountLevel
 
 const reportTypes: { 
   label: string; 
-  reports: { value: ReportType; label: string; icon: React.ElementType, description?: string, partyType?: PartyType }[] 
+  reports: { value: ReportType; label: string; icon: React.ElementType, description?: string, partyType?: PartyType, hasCityFilter?: boolean }[] 
 }[] = [
   {
     label: "Financial Reports",
@@ -53,7 +53,7 @@ const reportTypes: {
    {
     label: "Receivables & Inventory",
     reports: [
-      { value: 'customer-receivables-aging', label: 'Client Receivables (Aging)', icon: Users, description: "Age-wise analysis of outstanding receivables.", partyType: 'customer' },
+      { value: 'debtor-creditor-aging', label: 'Debtor/Creditor Aging Report', icon: Users, description: "Age-wise analysis of outstanding balances.", partyType: 'account', hasCityFilter: true },
       { value: 'stock-report', label: 'Stock Report', icon: PackageSearch, description: "Real-time stock position and valuation.", partyType: 'product' },
       { value: 'item-wise-sales-purchase', label: 'Item-wise Sales/Purchase', icon: ClipboardCheck, description: "Sales and purchase history for items.", partyType: 'product' },
     ]
@@ -62,8 +62,9 @@ const reportTypes: {
 
 const mockCustomers = [{ id: '1', name: 'Global Tech Corp' }, { id: '2', name: 'Innovate Solutions' }];
 const mockSuppliers = [{ id: '1', name: 'Office Supplies Inc.' }, { id: '2', name: 'Component Suppliers' }];
-const mockLedgerAccounts = [{id: '1', name: '1.01.001 - Cash'}, {id: '2', name: '4.01.001 - Product Sales'}, { id: '3', name: '1.01.002 - Accounts Receivable' }];
+const mockLedgerAccounts = [{id: '1', name: '1.01.001 - Cash'}, {id: '2', name: '4.01.001 - Product Sales'}, { id: '3', name: '1.01.002 - Accounts Receivable' }, {id: '4', name: '2.01.001 - Accounts Payable'}];
 const mockProducts = [{id: '1', name: 'P001 - Premium Keyboard'}, {id: '2', name: 'P002 - Optical Mouse'}, {id: '3', name: 'P003 - 27-inch Monitor'}];
+const mockCities = ["Metropolis", "Gotham", "Star City"];
 
 const mockCompanyInfo = {
     name: "Tax Assistant Pro Inc.",
@@ -78,6 +79,7 @@ export function ReportsClient() {
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [selectedParty, setSelectedParty] = useState<string | undefined>(undefined);
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
+  const [selectedCity, setSelectedCity] = useState<string | undefined>(undefined);
   const [generatedReport, setGeneratedReport] = useState<string | null>(null);
 
   const getReportDetails = (type?: ReportType) => {
@@ -276,6 +278,20 @@ Period: ${startDate ? format(startDate, "PPP") : ''} - ${endDate ? format(endDat
                 </Select>
               </div>
           ): null}
+          
+          { currentReportDetails?.hasCityFilter && (
+            <div className="space-y-2">
+              <Label htmlFor="city">City (Optional)</Label>
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger id="city"><SelectValue placeholder="All Cities" /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Cities</SelectItem>
+                    {mockCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
 
           <div className="space-y-2">
             <Label htmlFor="startDate">Start Date</Label>
