@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 
 export default function RootPage() {
-  redirect('/dashboard');
-  // Next.js redirect is a server-side operation, so rendering null or an empty fragment is fine.
+  // In a real app, you might check if setup is complete before redirecting.
+  // For now, we'll always start with the setup wizard.
+  redirect('/setup');
   return null;
 }
