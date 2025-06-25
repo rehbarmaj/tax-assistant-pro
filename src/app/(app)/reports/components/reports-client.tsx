@@ -139,6 +139,21 @@ export function ReportsClient() {
 
 --- End of Mock Data ---
 `;
+    } else if (reportType === 'daily-transaction-report') {
+        reportContent = `--- MOCK DATA ---
+
+| Date       | Doc #  | Type              | Party Name          | Narration                          | Amount    |
+|------------|--------|-------------------|---------------------|------------------------------------|-----------|
+| 2023-10-01 | PN001  | Purchase Note     | Tech Supplies Inc.  | Monthly office supplies            | $755.00   |
+| 2023-10-02 | RV001  | Receipt Voucher   | Client A Services   | Payment for project X              | $1,200.00 |
+| 2023-10-05 | SN001  | Sale Note         | Global Corp         | Sale of 2 monitors                 | $590.00   |
+| 2023-10-05 | PV002  | Payment Voucher   | Utility Services Co.| Electricity bill                   | $275.00   |
+| 2023-10-10 | PRN001 | Purchase Return   | Tech Supplies Inc.  | Return of 5 faulty mice            | ($56.00)  |
+| 2023-10-12 | SRN001 | Sales Return      | Global Corp         | Return of 1 monitor                | ($295.00) |
+| 2023-10-15 | JV001  | Journal Voucher   | N/A                 | To record depreciation for the month | -         |
+
+--- End of Mock Data ---
+`;
     } else {
       reportContent = `--- MOCK DATA ---
 
