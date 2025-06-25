@@ -64,6 +64,11 @@ const mockSuppliers = [{ id: '1', name: 'Office Supplies Inc.' }, { id: '2', nam
 const mockLedgerAccounts = [{id: '1', name: '1.01.001 - Cash'}, {id: '2', name: '4.01.001 - Product Sales'}, { id: '3', name: '1.01.002 - Accounts Receivable' }];
 const mockProducts = [{id: '1', name: 'P001 - Premium Keyboard'}, {id: '2', name: 'P002 - Optical Mouse'}, {id: '3', name: 'P003 - 27-inch Monitor'}];
 
+const mockCompanyInfo = {
+    name: "Tax Assistant Pro Inc.",
+    phone: "555-123-4567",
+    email: "contact@taxassistantpro.com",
+};
 
 export function ReportsClient() {
   const [reportType, setReportType] = useState<ReportType | undefined>(undefined);
@@ -112,11 +117,16 @@ export function ReportsClient() {
       }
     }
 
+    const companyHeader = `
+**${mockCompanyInfo.name}**
+**Phone:** ${mockCompanyInfo.phone} | **Email:** ${mockCompanyInfo.email}
+==================================================
+`;
+
     let reportContent = '';
 
     if (reportType === 'trial-balance') {
-      reportContent = `
-**Report Type:** ${reportDetails.label}
+      reportContent = `**Report Type:** ${reportDetails.label}
 **Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
 ${partyInfo ? `**${partyInfo}**` : ''}
 
@@ -138,8 +148,7 @@ ${partyInfo ? `**${partyInfo}**` : ''}
 --- End of Mock Data ---
 `;
     } else {
-      reportContent = `
-**Report Type:** ${reportDetails.label}
+      reportContent = `**Report Type:** ${reportDetails.label}
 **Period:** ${format(startDate, "PPP")} - ${format(endDate, "PPP")}
 ${partyInfo ? `**${partyInfo}**` : ''}
 
@@ -160,7 +169,7 @@ Total Credits: ($670.00)
 --- End of Mock Data ---
     `;
     }
-    setGeneratedReport(reportContent.trim());
+    setGeneratedReport(`${companyHeader}\n${reportContent}`.trim());
   };
   
   const handleExport = (formatType: 'PDF' | 'Excel') => {
@@ -307,5 +316,3 @@ Total Credits: ($670.00)
     </div>
   );
 }
-
-
