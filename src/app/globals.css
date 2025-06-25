@@ -91,3 +91,41 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  body > #__next, body > [data-radix-toast-provider] {
+    display: none;
+  }
+  
+  [data-radix-dialog-portal] {
+    all: unset;
+  }
+
+  [data-radix-dialog-overlay] {
+    display: none;
+  }
+
+  [data-radix-dialog-content] {
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    position: relative !important;
+    translate: 0 0 !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  
+  [data-radix-dialog-content] [data-radix-scroll-area-viewport] {
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Edit, Trash2, Search, BookCopy, Calendar as CalendarIcon, MinusCircle } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Search, BookCopy, Calendar as CalendarIcon, MinusCircle, Printer } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -443,7 +443,12 @@ function JournalVoucherDialog({ isOpen, onClose, onSave, voucher }: JournalVouch
                 </p>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="no-print flex items-center gap-2 pt-6 mt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => window.print()}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+            <div className="flex-grow" />
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
@@ -454,4 +459,5 @@ function JournalVoucherDialog({ isOpen, onClose, onSave, voucher }: JournalVouch
     </Dialog>
   );
 }
+
 

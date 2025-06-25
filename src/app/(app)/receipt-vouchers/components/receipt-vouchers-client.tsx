@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Edit, Trash2, Search, ArrowBigDownDash, Calendar as CalendarIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Search, ArrowBigDownDash, Calendar as CalendarIcon, Printer } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from '@/components/ui/card';
@@ -319,7 +319,12 @@ function VoucherDialog({ isOpen, onClose, onSave, voucher, voucherType }: Vouche
               <Textarea id="narration" name="narration" value={formData.narration || ''} onChange={handleChange} className="col-span-3" rows={3}/>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="no-print flex items-center gap-2 pt-6 mt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => window.print()}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+            <div className="flex-grow" />
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
