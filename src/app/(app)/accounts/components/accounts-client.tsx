@@ -88,24 +88,26 @@ export function AccountsClient() {
   };
 
   const handleDelete = (account: ChartOfAccount) => {
-    // Mock validation: prevent deletion if account has children
+    if (!confirm(`Are you sure you want to delete "${account.name}"? This may also delete child accounts and cannot be undone.`)) {
+        return;
+    }
+
     if (account.level === 1) {
-      if (subControlGroups.some(scg => scg.controlGroupId === account.id)) {
-        alert("Cannot delete a control group that has sub-control groups.");
-        return;
-      }
+      // Cascading delete: also delete associated sub-control groups and their ledger accounts
+      const subGroupsToDelete = subControlGroups.filter(scg => scg.controlGroupId === account.id);
+      const subGroupIdsToDelete = subGroupsToDelete.map(scg => scg.id);
+      
+      setLedgerAccounts(las => las.filter(la => !subGroupIdsToDelete.includes(la.subControlGroupId)));
+      setSubControlGroups(scgs => scgs.filter(scg => scg.controlGroupId !== account.id));
       setControlGroups(cgs => cgs.filter(cg => cg.id !== account.id));
+
     } else if (account.level === 2) {
-      if (ledgerAccounts.some(la => la.subControlGroupId === account.id)) {
-        alert("Cannot delete a sub-control group that has ledger accounts.");
-        return;
-      }
+      // Cascading delete: also delete associated ledger accounts
+      setLedgerAccounts(las => las.filter(la => la.subControlGroupId !== account.id));
       setSubControlGroups(scgs => scgs.filter(scg => scg.id !== account.id));
+
     } else if (account.level === 3) {
-      if ((account as LedgerAccount).balance !== 0) {
-        alert("Cannot delete a ledger account with a non-zero balance.");
-        return;
-      }
+      // Just delete the ledger account
       setLedgerAccounts(las => las.filter(la => la.id !== account.id));
     }
   };
