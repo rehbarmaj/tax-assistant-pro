@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -103,7 +104,7 @@ const IncomeTaxEstimatorPage: NextPage = () => {
                 </>
               ) : (
                 <>
-                  <Calculator className="mr-2 h-4 w-4" />
+                  <Wand2 className="mr-2 h-4 w-4" />
                   Estimate Tax
                 </>
               )}
