@@ -2,14 +2,13 @@ import type {Metadata} from 'next';
 import { I18nProviderClient } from '@/i18n/client';
 import type { ReactNode } from 'react';
 import '../globals.css';
-import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: 'Tax Assistant Pro',
   description: 'Manage your sales and income taxes efficiently.',
 };
 
-export default function RootLayout({
+export default function LocaleLayout({
   children,
   params: { locale },
 }: Readonly<{
@@ -26,7 +25,6 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <I18nProviderClient locale={locale}>
           {children}
-          <Toaster />
         </I18nProviderClient>
       </body>
     </html>
