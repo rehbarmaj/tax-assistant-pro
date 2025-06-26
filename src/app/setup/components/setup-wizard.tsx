@@ -52,11 +52,11 @@ export function SetupWizard() {
       setError(result.message);
     }
   };
-
+  
   const handleGoToDashboard = () => {
-    // Default to 'en' locale for the redirect.
-    // In a more complex app, you might get the current locale from the URL.
-    router.push(`/en/dashboard`);
+    // Redirect to the dashboard. The middleware will automatically handle
+    // redirecting to the default locale (e.g., /en/dashboard).
+    router.push(`/dashboard`);
   };
 
   const progressValue = (currentStep / 3) * 100;
