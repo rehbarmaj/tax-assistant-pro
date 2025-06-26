@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Download, Upload, Loader2, AlertCircle, DatabaseBackup } from 'lucide-react';
-import { getBackupData } from '../actions';
+import { getBackupData } from '@/app/(app)/backup/actions';
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from '@/i18n/client';
 
 export function BackupRestoreClient() {
   const [isBackingUp, setIsBackingUp] = useState(false);
@@ -17,6 +18,7 @@ export function BackupRestoreClient() {
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const { toast } = useToast();
+  const t = useI18n();
 
   const handleBackup = async () => {
     setIsBackingUp(true);
@@ -40,14 +42,14 @@ export function BackupRestoreClient() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast({
-        title: "Backup Successful",
-        description: "Your application data has been downloaded.",
+        title: t('backupSuccessful'),
+        description: t('backupDownloaded'),
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Backup Failed",
-        description: "An unexpected error occurred while creating the backup.",
+        title: t('backupFailed'),
+        description: t('backupError'),
       });
     } finally {
       setIsBackingUp(false);
@@ -61,7 +63,7 @@ export function BackupRestoreClient() {
         setRestoreFile(file);
         setRestoreError(null);
       } else {
-        setRestoreError('Invalid file type. Please upload a .json file.');
+        setRestoreError(t('invalidFileType'));
         setRestoreFile(null);
       }
     }
@@ -69,7 +71,7 @@ export function BackupRestoreClient() {
 
   const handleRestore = async () => {
     if (!restoreFile) {
-      setRestoreError('Please select a backup file to restore.');
+      setRestoreError(t('selectBackupFile'));
       return;
     }
     setIsRestoring(true);
@@ -86,21 +88,21 @@ export function BackupRestoreClient() {
             const text = e.target?.result;
             JSON.parse(text as string); // Validate JSON
             toast({
-                title: "Restore Successful",
-                description: "Your data has been restored. Please refresh the page or navigate to see the changes.",
+                title: t('restoreSuccessful'),
+                description: t('restoreCompleted'),
             });
              // Reset the file input
             const fileInput = document.getElementById('restore-file') as HTMLInputElement;
             if(fileInput) fileInput.value = '';
             setRestoreFile(null);
         } catch (err) {
-            setRestoreError('The selected file is not a valid JSON backup file.');
+            setRestoreError(t('invalidJsonFile'));
         } finally {
              setIsRestoring(false);
         }
     };
     reader.onerror = () => {
-        setRestoreError('Failed to read the backup file.');
+        setRestoreError(t('failedToReadFile'));
         setIsRestoring(false);
     }
     reader.readAsText(restoreFile);
@@ -110,22 +112,22 @@ export function BackupRestoreClient() {
     <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-2 mb-6">
             <DatabaseBackup className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-primary">Backup & Restore</h1>
+            <h1 className="text-3xl font-bold text-primary">{t('backupAndRestore')}</h1>
         </div>
         <div className="grid md:grid-cols-2 gap-8">
             <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Download/> Create a Backup</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><Download/> {t('createBackup')}</CardTitle>
                     <CardDescription>
-                        Download a complete backup of your application data as a single JSON file. Store this file in a safe place.
+                       {t('createBackupDescription')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button onClick={handleBackup} disabled={isBackingUp} className="w-full">
                         {isBackingUp ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Creating Backup...</>
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>{t('creatingBackup')}</>
                         ) : (
-                            "Create & Download Backup"
+                            t('createAndDownloadBackup')
                         )}
                     </Button>
                 </CardContent>
@@ -133,29 +135,29 @@ export function BackupRestoreClient() {
 
             <Card className="shadow-lg">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Upload/> Restore from Backup</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><Upload/> {t('restoreFromBackup')}</CardTitle>
                     <CardDescription>
-                        Upload a previously created JSON backup file to restore your application's state. This will overwrite existing data.
+                       {t('restoreFromBackupDescription')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Warning</AlertTitle>
+                      <AlertTitle>{t('warning')}</AlertTitle>
                       <AlertDescription>
-                        Restoring from a backup is an irreversible action and will overwrite all current data.
+                        {t('restoreWarning')}
                       </AlertDescription>
                     </Alert>
                     <div className="space-y-2">
-                        <Label htmlFor="restore-file">Select Backup File (.json)</Label>
+                        <Label htmlFor="restore-file">{t('selectBackupFileJson')}</Label>
                         <Input id="restore-file" type="file" accept=".json" onChange={handleFileChange} />
                     </div>
                     {restoreError && <p className="text-sm text-destructive">{restoreError}</p>}
                     <Button onClick={handleRestore} disabled={isRestoring || !restoreFile} className="w-full">
                         {isRestoring ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Restoring Data...</>
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>{t('restoringData')}</>
                         ) : (
-                           "Restore From File"
+                           t('restoreFromFile')
                         )}
                     </Button>
                 </CardContent>

@@ -9,9 +9,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2, Wand2 } from 'lucide-react';
-import { estimateTaxAction } from './actions';
+import { estimateTaxAction } from '@/app/(app)/income-tax-estimator/actions';
 import type { EstimatedTaxResult } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from '@/i18n/client';
 
 const IncomeTaxEstimatorPage: NextPage = () => {
   const [profitData, setProfitData] = useState('');
@@ -19,6 +20,7 @@ const IncomeTaxEstimatorPage: NextPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const t = useI18n();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ const IncomeTaxEstimatorPage: NextPage = () => {
     setEstimationResult(null);
 
     if (!profitData.trim()) {
-      setError('Profit data cannot be empty.');
+      setError(t('profitDataEmpty'));
       setIsLoading(false);
       return;
     }
@@ -38,18 +40,18 @@ const IncomeTaxEstimatorPage: NextPage = () => {
         setError(result.error);
         toast({
           variant: "destructive",
-          title: "Estimation Error",
+          title: t('estimationError'),
           description: result.error,
         });
       } else if (result.data) {
         setEstimationResult(result.data);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      const errorMessage = err instanceof Error ? err.message : t('unknownError');
       setError(errorMessage);
       toast({
         variant: "destructive",
-        title: "Estimation Failed",
+        title: t('estimationFailed'),
         description: errorMessage,
       });
     } finally {
@@ -63,34 +65,33 @@ const IncomeTaxEstimatorPage: NextPage = () => {
         <CardHeader>
           <div className="flex items-center gap-2 mb-2">
             <Wand2 className="h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl font-bold text-primary">AI Income Tax Estimator</CardTitle>
+            <CardTitle className="text-3xl font-bold text-primary">{t('aiTaxEstimator')}</CardTitle>
           </div>
           <CardDescription>
-            Provide your profit data for the period to get an estimated quarterly income tax. 
-            The AI will analyze the data and provide an estimate.
+            {t('aiTaxEstimatorDescription')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="profitData" className="text-lg font-semibold">Profit Data</Label>
+              <Label htmlFor="profitData" className="text-lg font-semibold">{t('profitData')}</Label>
               <Textarea
                 id="profitData"
                 value={profitData}
                 onChange={(e) => setProfitData(e.target.value)}
-                placeholder="Enter your profit data here (e.g., total revenue, total expenses, net profit for the quarter)..."
+                placeholder={t('profitDataPlaceholder')}
                 rows={8}
                 className="shadow-inner focus:ring-2 focus:ring-primary"
                 aria-describedby="profitDataHelp"
               />
               <p id="profitDataHelp" className="text-sm text-muted-foreground">
-                Be as detailed as possible for a more accurate estimation.
+                {t('profitDataHelp')}
               </p>
             </div>
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+                <AlertTitle>{t('error')}</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -100,12 +101,12 @@ const IncomeTaxEstimatorPage: NextPage = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Estimating...
+                  {t('estimating')}
                 </>
               ) : (
                 <>
                   <Wand2 className="mr-2 h-4 w-4" />
-                  Estimate Tax
+                  {t('estimateTax')}
                 </>
               )}
             </Button>
@@ -122,24 +123,24 @@ const IncomeTaxEstimatorPage: NextPage = () => {
               ) : (
                 <AlertCircle className="h-7 w-7 text-yellow-500" />
               )}
-              Estimation Result
+              {t('estimationResult')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="text-sm font-medium text-muted-foreground">Estimated Quarterly Income Tax</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('estimatedQuarterlyTax')}</Label>
               <p className="text-2xl font-semibold text-primary">{estimationResult.estimatedTax}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-muted-foreground">Accuracy</Label>
+              <Label className="text-sm font-medium text-muted-foreground">{t('accuracy')}</Label>
               <p className={`text-lg font-medium ${estimationResult.isAccurate ? 'text-green-600' : 'text-yellow-600'}`}>
-                {estimationResult.isAccurate ? 'Considered Accurate' : 'Needs More Information'}
+                {estimationResult.isAccurate ? t('accuracyConsidered') : t('accuracyNeedsInfo')}
               </p>
             </div>
             {estimationResult.additionalDataNeeded && (
               <Alert variant={estimationResult.isAccurate ? "default" : "default"} className="bg-accent/20 border-accent/50">
                 <AlertCircle className="h-4 w-4 text-accent" />
-                <AlertTitle className="text-accent">Additional Data Needed</AlertTitle>
+                <AlertTitle className="text-accent">{t('additionalDataNeeded')}</AlertTitle>
                 <AlertDescription>{estimationResult.additionalDataNeeded}</AlertDescription>
               </Alert>
             )}

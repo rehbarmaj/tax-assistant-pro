@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -123,6 +124,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <DropdownMenuLabel>{t('myAccount')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>{t('settings')}</DropdownMenuItem>
+              <DropdownMenuItem>{t('support')}</DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem>{t('logout')}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

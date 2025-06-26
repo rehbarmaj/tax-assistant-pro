@@ -69,31 +69,31 @@ const DashboardPage: NextPage = () => {
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <SummaryCard
-          title="Total Inventory Value"
+          title={t('totalInventoryValue')}
           value={summary ? formatCurrency(summary.inventoryValue) : 'Loading...'}
           icon={Package}
-          description="Current market value of all stock"
+          description={t('inventoryValueDescription')}
           isLoading={isLoading}
         />
         <SummaryCard
-          title="Sales Tax Liability"
+          title={t('salesTaxLiability')}
           value={summary ? formatCurrency(summary.salesTaxLiability) : 'Loading...'}
           icon={DollarSign}
-          description="Estimated for current period"
+          description={t('salesTaxLiabilityDescription')}
           isLoading={isLoading}
         />
         <SummaryCard
-          title="Estimated Income Tax"
+          title={t('estimatedIncomeTax')}
           value={summary ? formatCurrency(summary.estimatedIncomeTax) : 'Loading...'}
           icon={TrendingUp}
-          description="Quarterly estimate"
+          description={t('estimatedIncomeTaxDescription')}
           isLoading={isLoading}
         />
         <SummaryCard
-          title="Low Stock Items"
+          title={t('lowStockItems')}
           value={summary ? summary.lowStockItems : 'Loading...'}
           icon={AlertTriangle}
-          description="Items needing reorder"
+          description={t('lowStockItemsDescription')}
           isLoading={isLoading}
         />
       </div>
@@ -101,10 +101,10 @@ const DashboardPage: NextPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 shadow-lg">
           <CardHeader>
-            <CardTitle>Sales Overview</CardTitle>
+            <CardTitle>{t('salesOverview')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">A visual representation of sales trends.</p>
+            <p className="text-muted-foreground mb-4">{t('salesOverviewDescription')}</p>
             {/* Placeholder for chart */}
             <div className="w-full h-64 bg-muted rounded-md flex items-center justify-center">
               <Image src="https://placehold.co/600x300.png" alt="Sales Chart Placeholder" width={600} height={300} className="rounded-md" data-ai-hint="sales chart graph" />
@@ -113,7 +113,7 @@ const DashboardPage: NextPage = () => {
         </Card>
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>{t('recentActivity')}</CardTitle>
           </CardHeader>
           <CardContent>
              <ul className="space-y-3">
