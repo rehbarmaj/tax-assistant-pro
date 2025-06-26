@@ -92,6 +92,34 @@ body {
   }
 }
 
+[dir="rtl"] .group-data-\[side=left\]\\:-right-4 {
+  left: 0;
+  right: auto;
+}
+
+[dir="rtl"] .group-data-\[side=right\]\\:left-0 {
+  right: 0;
+  left: auto;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+[dir="rtl"] .text-left {
+    text-align: right;
+}
+
+[dir="rtl"] .mr-2 {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .ml-auto {
+    margin-right: auto;
+    margin-left: 0;
+}
+
 @media print {
   body > #__next, body > [data-radix-toast-provider] {
     display: none;
