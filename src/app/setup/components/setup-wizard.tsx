@@ -53,6 +53,12 @@ export function SetupWizard() {
     }
   };
 
+  const handleGoToDashboard = () => {
+    // Default to 'en' locale for the redirect.
+    // In a more complex app, you might get the current locale from the URL.
+    router.push(`/en/dashboard`);
+  };
+
   const progressValue = (currentStep / 3) * 100;
 
   return (
@@ -161,7 +167,7 @@ export function SetupWizard() {
             <CheckCircle className="h-12 w-12 mx-auto text-green-500" />
             <h2 className="text-2xl font-semibold">Setup Complete!</h2>
             <p className="text-muted-foreground">{successMessage}</p>
-            <Button size="lg" onClick={() => router.push('/dashboard')}>
+            <Button size="lg" onClick={handleGoToDashboard}>
                 Go to Dashboard
             </Button>
         </div>
