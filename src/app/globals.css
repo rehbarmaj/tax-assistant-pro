@@ -92,16 +92,6 @@ body {
   }
 }
 
-[dir="rtl"] .group-data-\[side=left\]\\:-right-4 {
-  left: 0;
-  right: auto;
-}
-
-[dir="rtl"] .group-data-\[side=right\]\\:left-0 {
-  right: 0;
-  left: auto;
-}
-
 [dir="rtl"] .text-right {
   text-align: left;
 }
