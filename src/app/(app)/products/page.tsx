@@ -1,12 +1,5 @@
-import type { NextPage } from 'next';
-import { ProductsClient } from './components/products-client';
-
-const ProductsPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <ProductsClient />
-    </div>
-  );
-};
-
-export default ProductsPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/products/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

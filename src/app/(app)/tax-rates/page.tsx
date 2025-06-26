@@ -1,12 +1,5 @@
-import type { NextPage } from 'next';
-import { TaxRatesClient } from './components/tax-rates-client';
-
-const TaxRatesPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <TaxRatesClient />
-    </div>
-  );
-};
-
-export default TaxRatesPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/tax-rates/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

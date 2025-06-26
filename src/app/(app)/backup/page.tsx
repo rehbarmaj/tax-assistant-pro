@@ -1,12 +1,5 @@
-import type { NextPage } from 'next';
-import { BackupRestoreClient } from './components/backup-client';
-
-const BackupRestorePage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <BackupRestoreClient />
-    </div>
-  );
-};
-
-export default BackupRestorePage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/backup/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

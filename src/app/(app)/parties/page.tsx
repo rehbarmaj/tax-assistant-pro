@@ -1,13 +1,5 @@
-
-import type { NextPage } from 'next';
-import { PartiesClient } from './components/parties-client';
-
-const PartiesPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <PartiesClient />
-    </div>
-  );
-};
-
-export default PartiesPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/parties/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

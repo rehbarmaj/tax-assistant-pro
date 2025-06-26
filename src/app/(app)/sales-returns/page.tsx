@@ -1,13 +1,5 @@
-
-import type { NextPage } from 'next';
-import { SalesReturnsClient } from './components/sales-returns-client';
-
-const SalesReturnsPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <SalesReturnsClient />
-    </div>
-  );
-};
-
-export default SalesReturnsPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/sales-returns/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

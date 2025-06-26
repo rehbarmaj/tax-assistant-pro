@@ -1,12 +1,5 @@
-import type { NextPage } from 'next';
-import { SettingsClient } from './components/settings-client';
-
-const SettingsPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <SettingsClient />
-    </div>
-  );
-};
-
-export default SettingsPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/settings/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

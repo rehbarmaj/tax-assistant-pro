@@ -1,12 +1,5 @@
-import type { NextPage } from 'next';
-import { PurchaseNotesClient } from './components/purchase-notes-client';
-
-const PurchaseNotesPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <PurchaseNotesClient />
-    </div>
-  );
-};
-
-export default PurchaseNotesPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/purchase-notes/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

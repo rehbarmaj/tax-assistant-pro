@@ -1,12 +1,5 @@
-import type { NextPage } from 'next';
-import { UserRightsClient } from './components/user-rights-client';
-
-const UserRightsPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <UserRightsClient />
-    </div>
-  );
-};
-
-export default UserRightsPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/user-rights/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

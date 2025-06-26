@@ -1,12 +1,5 @@
-import type { NextPage } from 'next';
-import { SaleNotesClient } from './components/sale-notes-client';
-
-const SaleNotesPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <SaleNotesClient />
-    </div>
-  );
-};
-
-export default SaleNotesPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/sale-notes/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

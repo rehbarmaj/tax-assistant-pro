@@ -1,13 +1,5 @@
-
-import type { NextPage } from 'next';
-import { PaymentVouchersClient } from './components/payment-vouchers-client';
-
-const PaymentVouchersPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <PaymentVouchersClient />
-    </div>
-  );
-};
-
-export default PaymentVouchersPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/payment-vouchers/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

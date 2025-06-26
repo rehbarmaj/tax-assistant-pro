@@ -1,13 +1,5 @@
-
-import type { NextPage } from 'next';
-import { JournalVouchersClient } from './components/journal-vouchers-client';
-
-const JournalVouchersPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <JournalVouchersClient />
-    </div>
-  );
-};
-
-export default JournalVouchersPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/journal-vouchers/page.tsx
+export default function ObsoletePage() {
+  return null;
+}

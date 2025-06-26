@@ -1,12 +1,5 @@
-import type { NextPage } from 'next';
-import { ReportsClient } from './components/reports-client';
-
-const ReportsPage: NextPage = () => {
-  return (
-    <div className="container mx-auto">
-      <ReportsClient />
-    </div>
-  );
-};
-
-export default ReportsPage;
+// This file is obsolete and has been replaced by the internationalized version
+// at /src/app/[locale]/(app)/reports/page.tsx
+export default function ObsoletePage() {
+  return null;
+}
