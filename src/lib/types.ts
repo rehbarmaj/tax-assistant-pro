@@ -186,3 +186,21 @@ export interface User {
   passwordHash: string; // Should always be a hash
   permissions: UserPermission[];
 }
+
+// For Backup & Restore
+export interface ApplicationBackup {
+  controlGroups: ControlGroup[];
+  subControlGroups: SubControlGroup[];
+  controlAccounts: ControlAccount[];
+  ledgerAccounts: LedgerAccount[];
+  products: Product[];
+  taxRates: TaxRate[];
+  paymentVouchers: PaymentVoucher[];
+  receiptVouchers: ReceiptVoucher[];
+  journalVouchers: JournalVoucher[];
+  purchaseNotes: PurchaseNote[];
+  saleNotes: SaleNote[];
+  purchaseReturnNotes: PurchaseReturnNote[];
+  saleReturnNotes: SaleReturnNote[];
+  users: User[];
+}

@@ -33,6 +33,7 @@ import {
   Users,
   ShieldCheck,
   Building,
+  DatabaseBackup,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,6 +57,7 @@ const navItems = [
   { href: '/reports', label: 'Reports', icon: FileText },
   { href: '/user-rights', label: 'User Rights', icon: ShieldCheck },
   { href: '/settings', label: 'Settings', icon: Building },
+  { href: '/backup', label: 'Backup & Restore', icon: DatabaseBackup },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {

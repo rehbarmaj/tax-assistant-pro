@@ -29,42 +29,8 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from "@/components/ui/switch";
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { initialControlGroups, initialSubControlGroups, initialControlAccounts, initialLedgerAccounts } from '@/lib/mock-data';
 
-// --- Mock Data ---
-const initialControlGroups: ControlGroup[] = [
-    { id: '1', code: '1', name: 'Assets', level: 1 },
-    { id: '2', code: '2', name: 'Liabilities', level: 1 },
-    { id: '3', code: '3', name: 'Equity', level: 1 },
-    { id: '4', code: '4', name: 'Revenue', level: 1 },
-    { id: '5', code: '5', name: 'Expenses', level: 1 },
-];
-
-const initialSubControlGroups: SubControlGroup[] = [
-    { id: '1.01', code: '1.01', name: 'Current Assets', controlGroupId: '1', level: 2 },
-    { id: '1.02', code: '1.02', name: 'Fixed Assets', controlGroupId: '1', level: 2 },
-    { id: '2.01', code: '2.01', name: 'Current Liabilities', controlGroupId: '2', level: 2 },
-    { id: '4.01', code: '4.01', name: 'Sales Revenue', controlGroupId: '4', level: 2 },
-    { id: '5.01', code: '5.01', name: 'Cost of Goods Sold', controlGroupId: '5', level: 2 },
-    { id: '5.02', code: '5.02', name: 'Operating Expenses', controlGroupId: '5', level: 2 },
-];
-
-const initialControlAccounts: ControlAccount[] = [
-    { id: '1.01.1', code: '1.01.1', name: 'Debtors', subControlGroupId: '1.01', level: 3 },
-    { id: '1.01.2', code: '1.01.2', name: 'Cash & Bank', subControlGroupId: '1.01', level: 3 },
-    { id: '1.02.1', code: '1.02.1', name: 'Furniture & Fixtures', subControlGroupId: '1.02', level: 3 },
-    { id: '2.01.1', code: '2.01.1', name: 'Creditors', subControlGroupId: '2.01', level: 3 },
-    { id: '4.01.1', code: '4.01.1', name: 'Product Sales', subControlGroupId: '4.01', level: 3 },
-    { id: '5.02.1', code: '5.02.1', name: 'General & Admin Expenses', subControlGroupId: '5.02', level: 3 },
-];
-
-const initialLedgerAccounts: LedgerAccount[] = [
-    { id: '1.01.2.001', code: '1.01.2.001', name: 'Cash on Hand', controlAccountId: '1.01.2', balance: 50000, canPost: true, level: 4, currency: 'USD' },
-    { id: '1.01.1.001', code: '1.01.1.001', name: 'Client A', controlAccountId: '1.01.1', balance: 15000, canPost: true, level: 4, currency: 'USD', ntn: '1234567-8', strn: '9876543210', address: '123 Tech Park', city: 'Metropolis', province: 'Central Province', contactPerson: 'John Smith', contactNumber: '555-1234', paymentTerms: 'Net 30' },
-    { id: '1.02.1.001', code: '1.02.1.001', name: 'Office Furniture', controlAccountId: '1.02.1', balance: 25000, canPost: true, level: 4, currency: 'USD' },
-    { id: '2.01.1.001', code: '2.01.1.001', name: 'Vendor B', controlAccountId: '2.01.1', balance: -10000, canPost: true, level: 4, currency: 'USD', ntn: '8765432-1', strn: '0123456789', address: '456 Supply Ave', city: 'Gotham', province: 'North Province', contactPerson: 'Jane Doe', contactNumber: '555-5678', paymentTerms: 'Net 60' },
-    { id: '4.01.1.001', code: '4.01.1.001', name: 'Domestic Sales', controlAccountId: '4.01.1', balance: -150000, canPost: true, level: 4, currency: 'USD' },
-    { id: '5.02.1.001', code: '5.02.1.001', name: 'Rent Expense', controlAccountId: '5.02.1', balance: 20000, canPost: true, level: 4, currency: 'USD' },
-];
 // --- End Mock Data ---
 
 const formatCurrency = (amount: number, currencyCode: string = 'USD') => {

@@ -26,15 +26,8 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from "@/components/ui/skeleton";
+import { initialTaxRates } from '@/lib/mock-data';
 
-
-const initialTaxRates: TaxRate[] = [
-  { id: '1', name: 'GST 5%', rate: 5 },
-  { id: '2', name: 'GST 12%', rate: 12 },
-  { id: '3', name: 'GST 18%', rate: 18 },
-  { id: '4', name: 'VAT 20%', rate: 20 },
-  { id: '5', name: 'No Tax', rate: 0 },
-];
 
 export function TaxRatesClient() {
   const [taxRates, setTaxRates] = useState<TaxRate[]>([]);

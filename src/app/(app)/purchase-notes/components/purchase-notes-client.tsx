@@ -33,37 +33,8 @@ import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { initialPurchaseNotes, mockProducts, mockTaxRates } from '@/lib/mock-data';
 
-
-// MOCK DATA - In a real app, this would come from an API
-const mockTaxRates: TaxRate[] = [
-  { id: 'rate1', name: 'GST 5%', rate: 5 },
-  { id: 'rate2', name: 'GST 12%', rate: 12 },
-  { id: 'rate3', name: 'GST 18%', rate: 18 },
-  { id: 'rate4', name: 'No Tax', rate: 0 },
-];
-const mockProducts: Product[] = [
-  { id: '1', code: 'P001', name: 'Premium Keyboard', unit: 'pcs', purchasePrice: 45, salePrice: 75, hsnSac: '847160', taxRateId: 'rate3' },
-  { id: '2', code: 'P002', name: 'Optical Mouse', unit: 'pcs', purchasePrice: 10, salePrice: 20, hsnSac: '847160', taxRateId: 'rate2' },
-  { id: '3', code: 'P003', name: '27-inch Monitor', unit: 'pcs', purchasePrice: 150, salePrice: 250, hsnSac: '852852', taxRateId: 'rate3' },
-];
-const initialPurchaseNotes: PurchaseNote[] = [
-  { 
-    id: 'pn1', 
-    noteNumber: 'PN001', 
-    date: new Date('2023-10-01'), 
-    supplierName: 'Tech Supplies Inc.',
-    items: [
-      { id: 'item1', productId: '1', productName: 'Premium Keyboard', hsnSac: '847160', serialNumber: 'SN-KBD-001', quantity: 10, unitPrice: 45, taxRateId: 'rate3', taxAmount: 81, totalAmount: 531 },
-      { id: 'item2', productId: '2', productName: 'Optical Mouse', hsnSac: '847160', serialNumber: 'SN-MOU-005', quantity: 20, unitPrice: 10, taxRateId: 'rate2', taxAmount: 24, totalAmount: 224 },
-    ],
-    subTotal: 650,
-    discountAmount: 0,
-    totalTaxAmount: 105,
-    grandTotal: 755,
-    currency: 'USD'
-  },
-];
 
 const formatCurrency = (amount: number, currencyCode: string = 'USD') => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);

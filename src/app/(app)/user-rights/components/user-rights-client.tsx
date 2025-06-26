@@ -10,50 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { PlusCircle, Search, ShieldCheck, Save, Trash2, XCircle, AlertCircle } from 'lucide-react';
-
-// --- Mock Data ---
-const ALL_MODULES: { key: AppModule, name: string }[] = [
-    { key: 'products', name: 'Products' },
-    { key: 'tax-rates', name: 'Tax Rates' },
-    { key: 'accounts', name: 'Accounts' },
-    { key: 'parties', name: 'Parties' },
-    { key: 'purchase-notes', name: 'Purchase Notes' },
-    { key: 'sale-notes', name: 'Sale Notes' },
-    { key: 'payment-vouchers', name: 'Payment Vouchers' },
-    { key: 'receipt-vouchers', name: 'Receipt Vouchers' },
-    { key: 'journal-vouchers', name: 'Journal Vouchers' },
-    { key: 'reports', name: 'Reports' },
-    { key: 'user-rights', name: 'User Rights' },
-];
-
-const ALL_PERMISSIONS: Permission[] = ['view', 'add', 'edit', 'delete'];
-
-const initialUsers: User[] = [
-  {
-    id: '1',
-    userId: 'ADMIN',
-    login: 'admin',
-    passwordHash: 'hashed_password_1',
-    permissions: ALL_MODULES.map(m => ({ module: m.key, rights: new Set<Permission>(ALL_PERMISSIONS) }))
-  },
-  {
-    id: '2',
-    userId: 'DATAENTRY',
-    login: 'data.entry',
-    passwordHash: 'hashed_password_2',
-    permissions: [
-      { module: 'products', rights: new Set(['view', 'add', 'edit']) },
-      { module: 'parties', rights: new Set(['view', 'add', 'edit']) },
-      { module: 'purchase-notes', rights: new Set(['view', 'add']) },
-      { module: 'sale-notes', rights: new Set(['view', 'add']) },
-    ]
-  }
-];
+import { initialUsers, ALL_MODULES, ALL_PERMISSIONS } from '@/lib/mock-data';
 
 // --- Zod Schema for Validation ---
 const userFormSchema = z.object({

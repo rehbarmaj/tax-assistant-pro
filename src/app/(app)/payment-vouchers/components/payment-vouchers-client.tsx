@@ -32,12 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-
-const initialPaymentVouchers: PaymentVoucher[] = [
-  { id: 'pv1', voucherNumber: 'PV001', date: new Date('2023-10-01'), partyName: 'Office Supplies Inc.', amount: 150.75, paymentMode: 'Bank Transfer', narration: 'Monthly office supplies', currency: 'USD' },
-  { id: 'pv2', voucherNumber: 'PV002', date: new Date('2023-10-05'), partyName: 'Utility Services Co.', amount: 275.00, paymentMode: 'Cheque', narration: 'Electricity bill', currency: 'USD' },
-  { id: 'pv3', voucherNumber: 'PV003', date: new Date('2023-10-10'), partyName: 'Freelancer John Doe', amount: 500.00, paymentMode: 'UPI', narration: 'Content writing services', currency: 'USD' },
-];
+import { initialPaymentVouchers } from '@/lib/mock-data';
 
 const voucherModeOptions: { value: VoucherMode; label: string }[] = [
   { value: 'Cash', label: 'Cash' },

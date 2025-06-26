@@ -32,12 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-
-const initialReceiptVouchers: ReceiptVoucher[] = [
-  { id: 'rv1', voucherNumber: 'RV001', date: new Date('2023-10-02'), partyName: 'Client A Services', amount: 1200.00, receiptMode: 'Bank Transfer', narration: 'Payment for project X', currency: 'USD' },
-  { id: 'rv2', voucherNumber: 'RV002', date: new Date('2023-10-08'), partyName: 'Customer B Goods', amount: 350.50, receiptMode: 'Cash', narration: 'Sale of product Y', currency: 'USD' },
-  { id: 'rv3', voucherNumber: 'RV003', date: new Date('2023-10-12'), partyName: 'Client C Consulting', amount: 2500.00, receiptMode: 'Cheque', narration: 'Consulting fees', currency: 'USD' },
-];
+import { initialReceiptVouchers } from '@/lib/mock-data';
 
 const voucherModeOptions: { value: VoucherMode; label: string }[] = [
   { value: 'Cash', label: 'Cash' },

@@ -32,31 +32,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-const initialJournalVouchers: JournalVoucher[] = [
-  { 
-    id: 'jv1', 
-    voucherNumber: 'JV001', 
-    date: new Date('2023-10-15'), 
-    narration: 'To record depreciation for the month', 
-    currency: 'USD',
-    entries: [
-      { id: 'e1-1', accountName: 'Depreciation Expense', debit: 500, credit: 0, narration: 'Office Equipment Depreciation' },
-      { id: 'e1-2', accountName: 'Accumulated Depreciation - Office Equipment', debit: 0, credit: 500 },
-    ] 
-  },
-  { 
-    id: 'jv2', 
-    voucherNumber: 'JV002', 
-    date: new Date('2023-10-20'), 
-    narration: 'To correct misclassified expense', 
-    currency: 'USD',
-    entries: [
-      { id: 'e2-1', accountName: 'Office Supplies Expense', debit: 75, credit: 0 },
-      { id: 'e2-2', accountName: 'Miscellaneous Expense', debit: 0, credit: 75, narration: 'Correction of earlier entry' },
-    ]
-  },
-];
+import { initialJournalVouchers } from '@/lib/mock-data';
 
 const defaultJournalEntry = (): Omit<JournalEntry, 'id'> => ({
   accountName: '',
@@ -459,5 +435,3 @@ function JournalVoucherDialog({ isOpen, onClose, onSave, voucher }: JournalVouch
     </Dialog>
   );
 }
-
-
