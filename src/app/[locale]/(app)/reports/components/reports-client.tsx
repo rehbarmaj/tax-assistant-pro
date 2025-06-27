@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, Download, FileText, BarChart3, PackageSearch, Users, Building, Landmark, ClipboardCheck, Scale, FileClock, Percent } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Combobox } from '@/components/ui/combobox';
+import { formatCurrency } from '@/lib/currency';
 
 type ReportType = 
   | 'account-ledger' | 'cost-of-sales' | 'daily-transaction-report' | 'item-ledger'
@@ -82,6 +83,7 @@ export function ReportsClient() {
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [selectedCity, setSelectedCity] = useState<string | undefined>(undefined);
   const [generatedReport, setGeneratedReport] = useState<string | null>(null);
+  const currencySymbol = '$'; // Simulate fetching setting
 
   const getReportDetails = (type?: ReportType) => {
     if (!type) return null;
@@ -124,22 +126,24 @@ export function ReportsClient() {
     }
 
     let reportContent = '';
+    const f = (amount: number) => formatCurrency(amount, currencySymbol);
+
 
     if (reportType === 'trial-balance') {
       reportContent = `--- MOCK DATA ---
 
 | Account Name                      | Opening Balance | Period Debit | Period Credit | Closing Balance |
 |-----------------------------------|-----------------|--------------|---------------|-----------------|
-| Cash                              | $50,000.00 Dr.  | $1,500.00    | $800.00       | $50,700.00 Dr.  |
-| Accounts Receivable               | $15,000.00 Dr.  | $10,000.00   | $5,000.00     | $20,000.00 Dr.  |
-| Furniture & Fixtures              | $25,000.00 Dr.  | $0.00        | $0.00         | $25,000.00 Dr.  |
-| Accounts Payable                  | $10,000.00 Cr.  | $2,000.00    | $7,000.00     | $15,000.00 Cr.  |
-| Product Sales                     | $150,000.00 Cr. | $0.00        | $10,000.00    | $160,000.00 Cr. |
-| Rent Expense                      | $20,000.00 Dr.  | $5,000.00    | $0.00         | $25,000.00 Dr.  |
+| Cash                              | ${f(50000)} Dr.  | ${f(1500)}    | ${f(800)}       | ${f(50700)} Dr.  |
+| Accounts Receivable               | ${f(15000)} Dr.  | ${f(10000)}   | ${f(5000)}     | ${f(20000)} Dr.  |
+| Furniture & Fixtures              | ${f(25000)} Dr.  | ${f(0)}        | ${f(0)}         | ${f(25000)} Dr.  |
+| Accounts Payable                  | ${f(10000)} Cr.  | ${f(2000)}    | ${f(7000)}     | ${f(15000)} Cr.  |
+| Product Sales                     | ${f(150000)} Cr. | ${f(0)}        | ${f(10000)}    | ${f(160000)} Cr. |
+| Rent Expense                      | ${f(20000)} Dr.  | ${f(5000)}    | ${f(0)}         | ${f(25000)} Dr.  |
 
 **Totals:**
-                                    |                 | **$18,500.00** | **$22,800.00**  |                 |
-                                    | **Closing Dr: $120,700.00** | | | **Closing Cr: $175,000.00** |
+                                    |                 | **${f(18500)}** | **${f(22800)}**  |                 |
+                                    | **Closing Dr: ${f(120700)}** | | | **Closing Cr: ${f(175000)}** |
 
 --- End of Mock Data ---
 `;
@@ -148,12 +152,12 @@ export function ReportsClient() {
 
 | Date       | Doc #  | Type              | Party Name          | Narration                          | Amount    |
 |------------|--------|-------------------|---------------------|------------------------------------|-----------|
-| 2023-10-01 | PN001  | Purchase Note     | Tech Supplies Inc.  | Monthly office supplies            | $755.00   |
-| 2023-10-02 | RV001  | Receipt Voucher   | Client A Services   | Payment for project X              | $1,200.00 |
-| 2023-10-05 | SN001  | Sale Note         | Global Corp         | Sale of 2 monitors                 | $590.00   |
-| 2023-10-05 | PV002  | Payment Voucher   | Utility Services Co.| Electricity bill                   | $275.00   |
-| 2023-10-10 | PRN001 | Purchase Return   | Tech Supplies Inc.  | Return of 5 faulty mice            | ($56.00)  |
-| 2023-10-12 | SRN001 | Sales Return      | Global Corp         | Return of 1 monitor                | ($295.00) |
+| 2023-10-01 | PN001  | Purchase Note     | Tech Supplies Inc.  | Monthly office supplies            | ${f(755.00)}   |
+| 2023-10-02 | RV001  | Receipt Voucher   | Client A Services   | Payment for project X              | ${f(1200.00)} |
+| 2023-10-05 | SN001  | Sale Note         | Global Corp         | Sale of 2 monitors                 | ${f(590.00)}   |
+| 2023-10-05 | PV002  | Payment Voucher   | Utility Services Co.| Electricity bill                   | ${f(275.00)}   |
+| 2023-10-10 | PRN001 | Purchase Return   | Tech Supplies Inc.  | Return of 5 faulty mice            | (${f(56.00)})  |
+| 2023-10-12 | SRN001 | Sales Return      | Global Corp         | Return of 1 monitor                | (${f(295.00)}) |
 | 2023-10-15 | JV001  | Journal Voucher   | N/A                 | To record depreciation for the month | -         |
 
 --- End of Mock Data ---
@@ -163,15 +167,15 @@ export function ReportsClient() {
 
 | Date       | Document# | Details                 | Debit     | Credit    | Balance   |
 |------------|-----------|-------------------------|-----------|-----------|-----------|
-| 2023-10-01 | SN001     | Sale Note               | $590.00   |           | $590.00   |
-| 2023-10-05 | RV002     | Receipt from customer   |           | $590.00   | $0.00     |
-| 2023-10-10 | SN002     | Sale Note               | $120.50   |           | $120.50   |
-| 2023-10-12 | SRN001    | Sales Return Note       |           | ($80.00)  | $40.50    |
+| 2023-10-01 | SN001     | Sale Note               | ${f(590.00)}   |           | ${f(590.00)}   |
+| 2023-10-05 | RV002     | Receipt from customer   |           | ${f(590.00)}   | ${f(0.00)}     |
+| 2023-10-10 | SN002     | Sale Note               | ${f(120.50)}   |           | ${f(120.50)}   |
+| 2023-10-12 | SRN001    | Sales Return Note       |           | (${f(80.00)})  | ${f(40.50)}    |
 
 **Summary:**
-Total Debits: $710.50
-Total Credits: ($670.00)
-**Closing Balance: $40.50**
+Total Debits: ${f(710.50)}
+Total Credits: (${f(670.00)})
+**Closing Balance: ${f(40.50)}**
 
 --- End of Mock Data ---
     `;
@@ -350,14 +354,14 @@ Period: ${startDate ? format(startDate, "PPP") : ''} - ${endDate ? format(endDat
                     <Image src={mockCompanyInfo.logoUrl} alt="Company Logo" width={80} height={80} className="rounded-md" data-ai-hint="company logo"/>
                     <div>
                         <h3 className="text-lg font-bold">{mockCompanyInfo.name}</h3>
-                        <p className="text-xs text-muted-foreground">Phone: {mockCompanyInfo.phone}</p>
-                        <p className="text-xs text-muted-foreground">Email: {mockCompanyInfo.email}</p>
+                        <p className="text-xs text-muted-foreground">Phone: ${mockCompanyInfo.phone}</p>
+                        <p className="text-xs text-muted-foreground">Email: ${mockCompanyInfo.email}</p>
                     </div>
                 </div>
                 <div className="text-right">
                   <h4 className="font-bold text-lg">{getReportDetails(reportType)?.label}</h4>
                   <p className="text-xs text-muted-foreground">
-                      For the period: {startDate ? format(startDate, "PPP") : ''} to {endDate ? format(endDate, "PPP") : ''}
+                      For the period: ${startDate ? format(startDate, "PPP") : ''} to ${endDate ? format(endDate, "PPP") : ''}
                   </p>
                 </div>
             </div>
