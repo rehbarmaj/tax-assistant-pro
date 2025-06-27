@@ -33,6 +33,7 @@ import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { initialJournalVouchers } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/currency';
 
 const defaultJournalEntry = (): Omit<JournalEntry, 'id'> => ({
   accountName: '',
@@ -40,10 +41,6 @@ const defaultJournalEntry = (): Omit<JournalEntry, 'id'> => ({
   credit: 0,
   narration: '',
 });
-
-const formatCurrency = (amount: number, currencyCode: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
-};
 
 const formatDate = (date: Date | string) => {
   if (typeof date === 'string') {
@@ -58,6 +55,7 @@ export function JournalVouchersClient() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<JournalVoucher | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const currencySymbol = '$'; // Simulate fetching setting
 
   useEffect(() => {
     // Simulate API call
@@ -163,8 +161,8 @@ export function JournalVouchersClient() {
                       <TableCell className="font-medium">{voucher.voucherNumber}</TableCell>
                       <TableCell>{formatDate(voucher.date)}</TableCell>
                       <TableCell className="truncate max-w-xs">{voucher.narration || 'N/A'}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(totals.debit, voucher.currency)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(totals.credit, voucher.currency)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(totals.debit, currencySymbol)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(totals.credit, currencySymbol)}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleEditVoucher(voucher)} className="hover:text-primary">
                           <Edit className="h-4 w-4" />
@@ -193,6 +191,7 @@ export function JournalVouchersClient() {
         onClose={() => setIsDialogOpen(false)}
         onSave={handleSaveVoucher}
         voucher={editingVoucher}
+        currencySymbol={currencySymbol}
       />
     </div>
   );
@@ -203,9 +202,10 @@ interface JournalVoucherDialogProps {
   onClose: () => void;
   onSave: (voucherData: Omit<JournalVoucher, 'id' | 'currency'> & { id?: string }) => void; 
   voucher: JournalVoucher | null;
+  currencySymbol: string;
 }
 
-function JournalVoucherDialog({ isOpen, onClose, onSave, voucher }: JournalVoucherDialogProps) {
+function JournalVoucherDialog({ isOpen, onClose, onSave, voucher, currencySymbol }: JournalVoucherDialogProps) {
   const [formData, setFormData] = useState<Partial<Omit<JournalVoucher, 'currency'>>>({ entries: [defaultJournalEntry()] });
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
@@ -276,7 +276,7 @@ function JournalVoucherDialog({ isOpen, onClose, onSave, voucher }: JournalVouch
     }, {debit: 0, credit: 0});
 
     if (totals.debit !== totals.credit) {
-        alert(`Total debits (${formatCurrency(totals.debit)}) must equal total credits (${formatCurrency(totals.credit)}).`);
+        alert(`Total debits (${formatCurrency(totals.debit, currencySymbol)}) must equal total credits (${formatCurrency(totals.credit, currencySymbol)}).`);
         return;
     }
     // Remove temporary 'id' from entries before saving if it was only for client-side keying
@@ -408,14 +408,14 @@ function JournalVoucherDialog({ isOpen, onClose, onSave, voucher }: JournalVouch
                     Totals:
                   </div>
                   <div className={`flex gap-4 font-semibold ${currentTotals.debit !== currentTotals.credit ? 'text-destructive' : 'text-green-600'}`}>
-                    <span>Debits: {formatCurrency(currentTotals.debit)}</span>
-                    <span>Credits: {formatCurrency(currentTotals.credit)}</span>
+                    <span>Debits: {formatCurrency(currentTotals.debit, currencySymbol)}</span>
+                    <span>Credits: {formatCurrency(currentTotals.credit, currencySymbol)}</span>
                   </div>
               </CardFooter>
             </Card>
             {currentTotals.debit !== currentTotals.credit && (
                 <p className="text-sm text-destructive text-center">
-                    Total debits and credits must match. Current difference: {formatCurrency(Math.abs(currentTotals.debit - currentTotals.credit))}
+                    Total debits and credits must match. Current difference: {formatCurrency(Math.abs(currentTotals.debit - currentTotals.credit), currencySymbol)}
                 </p>
             )}
           </div>

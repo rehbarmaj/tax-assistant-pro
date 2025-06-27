@@ -31,6 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from '@/components/ui/card';
 import { initialProducts, mockTaxRates } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/currency';
 
 export function ProductsClient() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,6 +40,7 @@ export function ProductsClient() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const currencySymbol = '$'; // Simulate fetching setting
 
   useEffect(() => {
     // Simulate API call
@@ -204,8 +206,8 @@ export function ProductsClient() {
                   <TableCell>{product.code}</TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.unit}</TableCell>
-                  <TableCell className="text-right">${product.purchasePrice.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">${product.salePrice.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(product.purchasePrice, currencySymbol)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(product.salePrice, currencySymbol)}</TableCell>
                   <TableCell>{product.hsnSac}</TableCell>
                   <TableCell>{getTaxRateName(product.taxRateId)}</TableCell>
                   <TableCell className="text-right">

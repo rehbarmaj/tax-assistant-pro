@@ -33,6 +33,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { initialPaymentVouchers } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/currency';
 
 const voucherModeOptions: { value: VoucherMode; label: string }[] = [
   { value: 'Cash', label: 'Cash' },
@@ -49,6 +50,7 @@ export function PaymentVouchersClient() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<PaymentVoucher | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const currencySymbol = '$'; // Simulate fetching setting
 
   useEffect(() => {
     // Simulate API call
@@ -87,10 +89,6 @@ export function PaymentVouchersClient() {
     voucher.partyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (voucher.narration && voucher.narration.toLowerCase().includes(searchTerm.toLowerCase()))
   ), [vouchers, searchTerm]);
-
-  const formatCurrency = (amount: number, currencyCode: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
-  };
 
   const formatDate = (date: Date | string) => {
     if (typeof date === 'string') {
@@ -158,7 +156,7 @@ export function PaymentVouchersClient() {
                     <TableCell>{formatDate(voucher.date)}</TableCell>
                     <TableCell>{voucher.partyName}</TableCell>
                     <TableCell>{voucher.paymentMode}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(voucher.amount, voucher.currency)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(voucher.amount, currencySymbol)}</TableCell>
                     <TableCell className="truncate max-w-xs">{voucher.narration || 'N/A'}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => handleEditVoucher(voucher)} className="hover:text-primary">

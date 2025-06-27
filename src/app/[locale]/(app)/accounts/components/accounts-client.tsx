@@ -30,12 +30,9 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { initialControlGroups, initialSubControlGroups, initialControlAccounts, initialLedgerAccounts } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/currency';
 
 // --- End Mock Data ---
-
-const formatCurrency = (amount: number, currencyCode: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
-};
 
 export function AccountsClient() {
   const [controlGroups, setControlGroups] = useState<ControlGroup[]>([]);
@@ -46,6 +43,7 @@ export function AccountsClient() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<ChartOfAccount | null>(null);
   const [dialogContext, setDialogContext] = useState<{ level: 1 | 2 | 3 | 4, parentId?: string } | null>(null);
+  const currencySymbol = '$'; // Simulate fetching setting
 
   useEffect(() => {
     // Simulate API call
@@ -226,7 +224,7 @@ export function AccountsClient() {
                                                         <span>{la.code} - {la.name}</span>
                                                     </div>
                                                     <div className="flex items-center gap-4">
-                                                        <span className="font-mono text-sm">{formatCurrency(la.balance, la.currency)}</span>
+                                                        <span className="font-mono text-sm">{formatCurrency(la.balance, currencySymbol)}</span>
                                                         <div className="flex items-center gap-2">
                                                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenDialog(4, ca.id, la)}><Edit className="h-4 w-4" /></Button>
                                                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(la)}><Trash2 className="h-4 w-4 text-destructive" /></Button>

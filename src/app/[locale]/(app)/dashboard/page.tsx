@@ -8,6 +8,7 @@ import type { DashboardSummary } from '@/lib/types';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useI18n } from '@/i18n/client';
+import { formatCurrency } from '@/lib/currency';
 
 interface SummaryCardProps {
   title: string;
@@ -42,6 +43,7 @@ const DashboardPage: NextPage = () => {
   const t = useI18n();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const currencySymbol = '$'; // Simulate fetching setting
 
   useEffect(() => {
     // Simulate API call
@@ -59,10 +61,6 @@ const DashboardPage: NextPage = () => {
     fetchSummary();
   }, []);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  };
-
   return (
     <div className="container mx-auto">
       <h1 className="text-3xl font-bold mb-8 text-primary">{t('dashboard')}</h1>
@@ -70,21 +68,21 @@ const DashboardPage: NextPage = () => {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <SummaryCard
           title={t('totalInventoryValue')}
-          value={summary ? formatCurrency(summary.inventoryValue) : 'Loading...'}
+          value={summary ? formatCurrency(summary.inventoryValue, currencySymbol) : 'Loading...'}
           icon={Package}
           description={t('inventoryValueDescription')}
           isLoading={isLoading}
         />
         <SummaryCard
           title={t('salesTaxLiability')}
-          value={summary ? formatCurrency(summary.salesTaxLiability) : 'Loading...'}
+          value={summary ? formatCurrency(summary.salesTaxLiability, currencySymbol) : 'Loading...'}
           icon={DollarSign}
           description={t('salesTaxLiabilityDescription')}
           isLoading={isLoading}
         />
         <SummaryCard
           title={t('estimatedIncomeTax')}
-          value={summary ? formatCurrency(summary.estimatedIncomeTax) : 'Loading...'}
+          value={summary ? formatCurrency(summary.estimatedIncomeTax, currencySymbol) : 'Loading...'}
           icon={TrendingUp}
           description={t('estimatedIncomeTaxDescription')}
           isLoading={isLoading}

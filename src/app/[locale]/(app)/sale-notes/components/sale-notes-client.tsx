@@ -34,11 +34,9 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { initialSaleNotes, mockProducts, mockTaxRates } from '@/lib/mock-data';
+import { formatCurrency } from '@/lib/currency';
 
 
-const formatCurrency = (amount: number, currencyCode: string = 'USD') => {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
-};
 const formatDate = (date: Date | string) => {
   const dateObj = typeof date === 'string' ? parseISO(date) : date;
   return format(dateObj, "PPP");
@@ -50,6 +48,7 @@ export function SaleNotesClient() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<SaleNote | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const currencySymbol = '$'; // Simulate fetching setting
 
   useEffect(() => {
     setTimeout(() => {
@@ -124,7 +123,7 @@ export function SaleNotesClient() {
               )) : filteredNotes.length > 0 ? filteredNotes.map(note => (
                 <TableRow key={note.id}>
                   <TableCell className="font-medium">{note.noteNumber}</TableCell><TableCell>{formatDate(note.date)}</TableCell>
-                  <TableCell>{note.customerName}</TableCell><TableCell className="text-right">{formatCurrency(note.grandTotal, note.currency)}</TableCell>
+                  <TableCell>{note.customerName}</TableCell><TableCell className="text-right">{formatCurrency(note.grandTotal, currencySymbol)}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEditNote(note)} className="hover:text-primary"><Edit className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDeleteNote(note.id)} className="hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
@@ -137,7 +136,7 @@ export function SaleNotesClient() {
           </Table>
         </CardContent>
       </Card>
-      <SaleNoteDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} onSave={handleSaveNote} note={editingNote} />
+      <SaleNoteDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} onSave={handleSaveNote} note={editingNote} currencySymbol={currencySymbol} />
     </div>
   );
 }
@@ -148,13 +147,14 @@ interface SaleNoteDialogProps {
   onClose: () => void;
   onSave: (noteData: Omit<SaleNote, 'id' | 'currency'> & { id?: string }) => void; 
   note: SaleNote | null;
+  currencySymbol: string;
 }
 
 const defaultItem = (): Omit<DocumentItem, 'id'|'productName'|'taxAmount'|'totalAmount'> => ({
     productId: '', hsnSac: '', serialNumber: '', quantity: 1, unitPrice: 0, taxRateId: mockTaxRates.find(r => r.rate === 0)?.id
 });
 
-function SaleNoteDialog({ isOpen, onClose, onSave, note }: SaleNoteDialogProps) {
+function SaleNoteDialog({ isOpen, onClose, onSave, note, currencySymbol }: SaleNoteDialogProps) {
   const [formData, setFormData] = useState<Partial<Omit<SaleNote, 'currency'>>>({});
   
   useEffect(() => {
@@ -280,7 +280,7 @@ function SaleNoteDialog({ isOpen, onClose, onSave, note }: SaleNoteDialogProps) 
                 <TableCell><Select value={item.taxRateId} onValueChange={(val) => handleItemChange(index, 'taxRateId', val)}><SelectTrigger className="h-8"><SelectValue placeholder="Select Tax" /></SelectTrigger><SelectContent>
                   {mockTaxRates.map(r => <SelectItem key={r.id} value={r.id}>{r.name} ({r.rate}%)</SelectItem>)}
                 </SelectContent></Select></TableCell>
-                <TableCell className="text-right font-medium">{formatCurrency(lineTotal)}</TableCell>
+                <TableCell className="text-right font-medium">{formatCurrency(lineTotal, currencySymbol)}</TableCell>
                 <TableCell className="text-right">{formData.items.length > 1 && (<Button type="button" variant="ghost" size="icon" onClick={() => removeItemLine(index)} className="text-destructive hover:text-destructive"><MinusCircle className="h-4 w-4" /></Button>)}</TableCell>
               </TableRow>);
             })}</TableBody>
@@ -290,11 +290,11 @@ function SaleNoteDialog({ isOpen, onClose, onSave, note }: SaleNoteDialogProps) 
         <div className="grid md:grid-cols-2 gap-4">
             <div><Label htmlFor="narration">Narration / Notes</Label><Textarea id="narration" name="narration" value={formData.narration || ''} onChange={handleHeaderChange} rows={4} /></div>
             <Card><CardContent className="p-4 space-y-2">
-                <div className="flex justify-between items-center"><span className="text-muted-foreground">Subtotal:</span><span className="font-semibold">{formatCurrency(totals.subTotal)}</span></div>
+                <div className="flex justify-between items-center"><span className="text-muted-foreground">Subtotal:</span><span className="font-semibold">{formatCurrency(totals.subTotal, currencySymbol)}</span></div>
                 <div className="flex justify-between items-center"><span className="text-muted-foreground">Discount:</span><Input name="discountAmount" type="number" step="0.01" value={formData.discountAmount || 0} onChange={handleHeaderChange} className="h-8 w-24 text-right" /></div>
-                <div className="flex justify-between items-center"><span className="text-muted-foreground">Tax:</span><span className="font-semibold">{formatCurrency(totals.totalTaxAmount)}</span></div>
+                <div className="flex justify-between items-center"><span className="text-muted-foreground">Tax:</span><span className="font-semibold">{formatCurrency(totals.totalTaxAmount, currencySymbol)}</span></div>
                 <hr className="my-1" />
-                <div className="flex justify-between items-center text-lg"><span className="font-bold">Grand Total:</span><span className="font-bold text-primary">{formatCurrency(totals.grandTotal)}</span></div>
+                <div className="flex justify-between items-center text-lg"><span className="font-bold">Grand Total:</span><span className="font-bold text-primary">{formatCurrency(totals.grandTotal, currencySymbol)}</span></div>
             </CardContent></Card>
         </div>
       </div>
