@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Download, FileText, BarChart3, PackageSearch, Users, Building, Landmark, ClipboardCheck, Scale, FileClock, Percent } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { Combobox } from '@/components/ui/combobox';
 
 type ReportType = 
   | 'account-ledger' | 'cost-of-sales' | 'daily-transaction-report' | 'item-ledger'
@@ -210,6 +211,33 @@ Period: ${startDate ? format(startDate, "PPP") : ''} - ${endDate ? format(endDat
 
   const currentReportDetails = getReportDetails(reportType);
 
+  const reportOptions = useMemo(() => reportTypes.flatMap(group => 
+    group.reports.map(report => ({
+      value: report.value,
+      label: (
+        <div className="flex items-center gap-2">
+          <report.icon className="h-4 w-4 text-muted-foreground" />
+          <span>{report.label}</span>
+        </div>
+      )
+    }))
+  ), []);
+
+  const partyOptions = useMemo(() => {
+    if (!currentReportDetails?.partyType) return [];
+    
+    const optionsMap = {
+      customer: mockCustomers,
+      supplier: mockSuppliers,
+      account: mockLedgerAccounts,
+      product: mockProducts,
+    };
+
+    const data = optionsMap[currentReportDetails.partyType as keyof typeof optionsMap] || [];
+    return data.map(p => ({ value: p.id, label: p.name }));
+
+  }, [currentReportDetails?.partyType]);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -224,21 +252,14 @@ Period: ${startDate ? format(startDate, "PPP") : ''} - ${endDate ? format(endDat
         <CardContent className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <div className="space-y-2 lg:col-span-2 xl:col-span-1">
             <Label htmlFor="reportType">Report Type</Label>
-            <Select value={reportType} onValueChange={(value: ReportType) => {setReportType(value); setSelectedParty(undefined); setGeneratedReport(null)}}>
-              <SelectTrigger id="reportType"><SelectValue placeholder="Select a report type" /></SelectTrigger>
-              <SelectContent>
-                {reportTypes.map((group) => (
-                  <SelectGroup key={group.label}>
-                    <Label className="px-2 py-1.5 text-xs font-semibold">{group.label}</Label>
-                    {group.reports.map((rt) => (
-                      <SelectItem key={rt.value} value={rt.value}>
-                        <div className="flex items-center gap-2"><rt.icon className="h-4 w-4" />{rt.label}</div>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={reportOptions}
+              value={reportType}
+              onChange={(value) => {setReportType(value as ReportType); setSelectedParty(undefined); setGeneratedReport(null)}}
+              placeholder="Select a report type"
+              searchPlaceholder="Search reports..."
+              emptyPlaceholder="No report found."
+            />
           </div>
           
            { currentReportDetails?.partyType === 'accountLevel' ? (
@@ -263,34 +284,30 @@ Period: ${startDate ? format(startDate, "PPP") : ''} - ${endDate ? format(endDat
                     currentReportDetails.partyType === 'product' ? 'Product (Optional)' :
                     'Account'
                 }</Label>
-                <Select value={selectedParty} onValueChange={setSelectedParty}>
-                  <SelectTrigger id="party"><SelectValue placeholder={
+                <Combobox
+                  options={partyOptions}
+                  value={selectedParty}
+                  onChange={setSelectedParty}
+                  placeholder={
                       currentReportDetails.partyType === 'product' ? 'All Products' : `Select a ${currentReportDetails.partyType}`
-                    } /></SelectTrigger>
-                  <SelectContent>
-                    {(
-                        currentReportDetails.partyType === 'customer' ? mockCustomers :
-                        currentReportDetails.partyType === 'supplier' ? mockSuppliers :
-                        currentReportDetails.partyType === 'product' ? mockProducts :
-                        mockLedgerAccounts
-                    ).map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  }
+                  searchPlaceholder='Search...'
+                  emptyPlaceholder='None found.'
+                />
               </div>
           ): null}
           
           { currentReportDetails?.hasCityFilter && (
             <div className="space-y-2">
               <Label htmlFor="city">City (Optional)</Label>
-              <Select value={selectedCity} onValueChange={setSelectedCity}>
-                <SelectTrigger id="city"><SelectValue placeholder="All Cities" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Cities</SelectItem>
-                    {mockCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={mockCities.map(c => ({value: c, label: c}))}
+                value={selectedCity}
+                onChange={setSelectedCity}
+                placeholder="All Cities"
+                searchPlaceholder='Search cities...'
+                emptyPlaceholder='No city found.'
+              />
             </div>
           )}
 

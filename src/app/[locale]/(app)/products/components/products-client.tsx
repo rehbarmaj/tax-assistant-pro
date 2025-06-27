@@ -32,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from '@/components/ui/card';
 import { initialProducts, mockTaxRates } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/currency';
+import { Combobox } from '@/components/ui/combobox';
 
 export function ProductsClient() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -277,6 +278,11 @@ function ProductDialog({ isOpen, onClose, onSave, product, taxRates }: ProductDi
     onSave(formData as Omit<Product, 'id'> & { id?: string });
   };
 
+  const taxRateOptions = taxRates.map(rate => ({
+    value: rate.id,
+    label: `${rate.name} (${rate.rate}%)`
+  }));
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px] shadow-xl">
@@ -314,16 +320,16 @@ function ProductDialog({ isOpen, onClose, onSave, product, taxRates }: ProductDi
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="taxRateId" className="text-right">Tax Rate</Label>
-              <Select name="taxRateId" value={formData.taxRateId} onValueChange={(value) => handleSelectChange('taxRateId', value)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select a tax rate" />
-                </SelectTrigger>
-                <SelectContent>
-                  {taxRates.map(rate => (
-                    <SelectItem key={rate.id} value={rate.id}>{rate.name} ({rate.rate}%)</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="col-span-3">
+                <Combobox
+                  options={taxRateOptions}
+                  value={formData.taxRateId}
+                  onChange={(value) => handleSelectChange('taxRateId', value)}
+                  placeholder="Select a tax rate"
+                  searchPlaceholder='Search tax rates...'
+                  emptyPlaceholder='No tax rate found.'
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>

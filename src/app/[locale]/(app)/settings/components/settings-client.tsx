@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Upload, Trash2, Building } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Combobox } from '@/components/ui/combobox';
 
 const settingsSchema = z.object({
   companyName: z.string().min(1, 'Company name is required.'),
@@ -74,10 +75,33 @@ export function SettingsClient() {
     const currentYear = new Date().getFullYear();
     const years = [];
     for (let year = currentYear; year >= currentYear - 100; year--) {
-        years.push(String(year));
+        years.push({ value: String(year), label: String(year) });
     }
     return years;
   };
+
+  const industryOptions = [
+    { value: "tech", label: "Technology" },
+    { value: "finance", label: "Finance" },
+    { value: "healthcare", label: "Healthcare" },
+    { value: "retail", label: "Retail" },
+    { value: "other", label: "Other" },
+  ];
+
+  const companySizeOptions = [
+    { value: "1-10", label: "1-10 employees" },
+    { value: "11-50", label: "11-50 employees" },
+    { value: "51-200", label: "51-200 employees" },
+    { value: "201-500", label: "201-500 employees" },
+    { value: "500+", label: "500+ employees" },
+  ];
+
+  const countryOptions = [
+      { value: "US", label: "United States" },
+      { value: "CA", label: "Canada" },
+      { value: "GB", label: "United Kingdom" },
+      { value: "AU", label: "Australia" },
+  ]
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -158,16 +182,12 @@ export function SettingsClient() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Industry Type</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="tech">Technology</SelectItem>
-                                    <SelectItem value="finance">Finance</SelectItem>
-                                    <SelectItem value="healthcare">Healthcare</SelectItem>
-                                    <SelectItem value="retail">Retail</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                <Combobox
+                                    options={industryOptions}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Select industry"
+                                />
                               <FormMessage />
                             </FormItem>
                           )}
@@ -178,16 +198,12 @@ export function SettingsClient() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Company Size</FormLabel>
-                               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="1-10">1-10 employees</SelectItem>
-                                    <SelectItem value="11-50">11-50 employees</SelectItem>
-                                    <SelectItem value="51-200">51-200 employees</SelectItem>
-                                    <SelectItem value="201-500">201-500 employees</SelectItem>
-                                    <SelectItem value="500+">500+ employees</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                <Combobox
+                                    options={companySizeOptions}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Select size"
+                                />
                               <FormMessage />
                             </FormItem>
                           )}
@@ -198,12 +214,13 @@ export function SettingsClient() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Founded Year</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    {generateYearOptions().map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
+                                <Combobox
+                                    options={generateYearOptions()}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Select year"
+                                    searchPlaceholder='Search year...'
+                                />
                               <FormMessage />
                             </FormItem>
                           )}
@@ -304,15 +321,12 @@ export function SettingsClient() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Country</FormLabel>
-                               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="US">United States</SelectItem>
-                                    <SelectItem value="CA">Canada</SelectItem>
-                                    <SelectItem value="GB">United Kingdom</SelectItem>
-                                    <SelectItem value="AU">Australia</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                <Combobox
+                                    options={countryOptions}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Select country"
+                                />
                               <FormMessage />
                             </FormItem>
                           )}

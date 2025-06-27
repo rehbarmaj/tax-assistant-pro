@@ -35,6 +35,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { initialSaleNotes, mockProducts, mockTaxRates } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/currency';
+import { Combobox } from '@/components/ui/combobox';
 
 
 const formatDate = (date: Date | string) => {
@@ -235,6 +236,8 @@ function SaleNoteDialog({ isOpen, onClose, onSave, note, currencySymbol }: SaleN
     const finalNote = { ...formData, ...totals, items: finalItems };
     onSave(finalNote as Omit<SaleNote, 'id' | 'currency'> & { id?: string });
   };
+  
+  const productOptions = mockProducts.map(p => ({ value: p.id, label: p.name }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}><DialogContent className="max-w-5xl shadow-xl">
@@ -268,9 +271,16 @@ function SaleNoteDialog({ isOpen, onClose, onSave, note, currencySymbol }: SaleN
               const lineTax = lineSubtotal * (taxRateValue / 100);
               const lineTotal = lineSubtotal + lineTax;
               return (<TableRow key={item.id || index}>
-                <TableCell><Select value={item.productId} onValueChange={(val) => handleItemChange(index, 'productId', val)} required><SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger><SelectContent>
-                  {mockProducts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent></Select></TableCell>
+                <TableCell>
+                  <Combobox
+                    options={productOptions}
+                    value={item.productId}
+                    onChange={(val) => handleItemChange(index, 'productId', val)}
+                    placeholder="Select Product"
+                    searchPlaceholder="Search products..."
+                    emptyPlaceholder="No product found."
+                  />
+                </TableCell>
                 <TableCell>
                   <Input value={item.hsnSac || ''} onChange={(e) => handleItemChange(index, 'hsnSac', e.target.value)} placeholder="HSN/SAC" className="mb-1 h-8" />
                   <Input value={item.serialNumber || ''} onChange={(e) => handleItemChange(index, 'serialNumber', e.target.value)} placeholder="Serial #" className="h-8" />
