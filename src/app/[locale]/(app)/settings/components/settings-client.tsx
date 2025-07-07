@@ -19,7 +19,6 @@ import { Combobox } from '@/components/ui/combobox';
 
 const settingsSchema = z.object({
   companyName: z.string().min(1, 'Company name is required.'),
-  currencySymbol: z.string().min(1, 'Symbol is required.').max(5, 'Symbol must be 5 characters or less.'),
   registrationNumber: z.string().optional(),
   industryType: z.string().optional(),
   companySize: z.string().optional(),
@@ -42,7 +41,6 @@ const defaultValues: Partial<SettingsFormValues> = {
   email: 'contact@taxassistantpro.com',
   country: 'US',
   website: 'https://taxassistantpro.com',
-  currencySymbol: '$',
 };
 
 export function SettingsClient() {
@@ -150,17 +148,6 @@ export function SettingsClient() {
                             <FormItem>
                               <FormLabel>Company Name *</FormLabel>
                               <FormControl><Input {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="currencySymbol"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Currency Symbol *</FormLabel>
-                              <FormControl><Input placeholder="$" {...field} /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )}

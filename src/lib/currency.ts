@@ -6,5 +6,6 @@ export function formatCurrency(amount: number, symbol: string = '$'): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  return `${isNegative ? '-' : ''}${symbol}${formattedAmount}`;
+  // The currency symbol is now hidden from the output by not including it here.
+  return `${isNegative ? '-' : ''}${formattedAmount}`;
 }
