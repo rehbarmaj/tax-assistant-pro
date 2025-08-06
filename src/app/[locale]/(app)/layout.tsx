@@ -36,6 +36,7 @@ import {
   ShieldCheck,
   Building,
   DatabaseBackup,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -46,22 +47,31 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 
 const navItems = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard },
-  { href: '/products', labelKey: 'products', icon: Package },
-  { href: '/tax-rates', labelKey: 'taxRates', icon: Percent },
-  { href: '/accounts', labelKey: 'accounts', icon: Landmark },
-  { href: '/parties', labelKey: 'parties', icon: Users },
-  { href: '/purchase-notes', labelKey: 'purchaseNotes', icon: ShoppingCart },
-  { href: '/purchase-returns', labelKey: 'purchaseReturns', icon: Undo2 },
-  { href: '/sale-notes', labelKey: 'saleNotes', icon: ClipboardList },
-  { href: '/sales-returns', labelKey: 'salesReturns', icon: Redo2 },
-  { href: '/payment-vouchers', labelKey: 'paymentVouchers', icon: ArrowBigUpDash },
-  { href: '/receipt-vouchers', labelKey: 'receiptVouchers', icon: ArrowBigDownDash },
-  { href: '/journal-vouchers', labelKey: 'journalVouchers', icon: BookCopy },
   { href: '/income-tax-estimator', labelKey: 'incomeTaxEstimator', icon: Calculator },
   { href: '/reports', labelKey: 'reports', icon: FileText },
-  { href: '/user-rights', labelKey: 'userRights', icon: ShieldCheck },
-  { href: '/settings', labelKey: 'settings', icon: Building },
-  { href: '/backup', labelKey: 'backupAndRestore', icon: DatabaseBackup },
+  {
+    labelKey: 'transactions', icon: BookCopy, children: [
+      { href: '/purchase-notes', labelKey: 'purchaseNotes', icon: ShoppingCart },
+      { href: '/purchase-returns', labelKey: 'purchaseReturns', icon: Undo2 },
+      { href: '/sale-notes', labelKey: 'saleNotes', icon: ClipboardList },
+      { href: '/sales-returns', labelKey: 'salesReturns', icon: Redo2 },
+      { href: '/payment-vouchers', labelKey: 'paymentVouchers', icon: ArrowBigUpDash },
+      { href: '/receipt-vouchers', labelKey: 'receiptVouchers', icon: ArrowBigDownDash },
+      { href: '/journal-vouchers', labelKey: 'journalVouchers', icon: BookCopy },
+    ]
+  },
+  {
+    labelKey: 'mastersAndSettings', icon: SettingsIcon, children: [
+      { href: '/accounts', labelKey: 'accounts', icon: Landmark },
+      { href: '/products', labelKey: 'products', icon: Package },
+      { href: '/parties', labelKey: 'parties', icon: Users },
+      { href: '/tax-rates', labelKey: 'taxRates', icon: Percent },
+      { href: '/financial-year-closing', labelKey: 'financialYearClosing', icon: Calculator },
+      { href: '/user-rights', labelKey: 'userRights', icon: ShieldCheck },
+      { href: '/settings', labelKey: 'settings', icon: Building },
+      { href: '/backup', labelKey: 'backupAndRestore', icon: DatabaseBackup },
+    ]
+  },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -81,7 +91,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <SidebarContent asChild>
             <ScrollArea className="h-full">
               <SidebarMenu className="p-4 pt-0">
-                {navItems.map((item) => (
+                {navItems.map((item) => item.href ? (
                   <SidebarMenuItem key={item.href}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -94,6 +104,30 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                         {t(item.labelKey as any)}
                       </TooltipContent>
                     </Tooltip>
+                  </SidebarMenuItem>
+                ) : (
+                  <SidebarMenuItem key={item.labelKey}>
+                    <SidebarMenuButton className="justify-start">
+                      <item.icon className="h-5 w-5" />
+                      <span>{t(item.labelKey as any)}</span>
+                    </SidebarMenuButton>
+                    <SidebarMenu>
+                      {item.children?.map(subItem => (
+                        <SidebarMenuItem key={subItem.href}>
+                           <Tooltip>
+                              <TooltipTrigger asChild>
+                                <SidebarMenuButton href={`/${locale}${subItem.href}`} className="justify-start">
+                                  <subItem.icon className="h-5 w-5" />
+                                  <span>{t(subItem.labelKey as any)}</span>
+                                </SidebarMenuButton>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" align="center">
+                                {t(subItem.labelKey as any)}
+                              </TooltipContent>
+                            </Tooltip>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>

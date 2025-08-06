@@ -1,5 +1,6 @@
+
 import type { NextPage } from 'next';
-import { SetupWizard } from './setup/components/setup-wizard';
+import { SetupWizard } from '@/app/[locale]/setup/components/setup-wizard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from 'lucide-react';
 

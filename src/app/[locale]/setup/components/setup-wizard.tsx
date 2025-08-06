@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, CheckCircle, AlertTriangle, Rocket, Server, KeyRound, User, Database } from 'lucide-react';
-import { testDatabaseConnection } from '@/app/setup/actions';
+import { testDatabaseConnection } from '../actions';
 import { useCurrentLocale, useI18n } from '@/i18n/client';
 
 const dbConfigSchema = z.object({
