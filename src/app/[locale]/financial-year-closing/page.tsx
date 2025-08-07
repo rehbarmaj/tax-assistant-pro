@@ -1,7 +1,7 @@
 
 "use client";
 
-import FinancialYearClosingWizard from './components/financial-year-closing-wizard';
+import FinancialYearClosingWizard from './financial-year-closing-wizard';
 
 const FinancialYearClosingPage = () => {
   return (
@@ -12,3 +12,4 @@ const FinancialYearClosingPage = () => {
 };
 
 export default FinancialYearClosingPage;
+
