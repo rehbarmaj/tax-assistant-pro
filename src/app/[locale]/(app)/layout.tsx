@@ -75,12 +75,12 @@ const navItems = [
   },
 ];
 
-export default function AppLayout({
+export default function AppLayoutClient({
   children,
-  params: { locale },
+  locale,
 }: {
   children: ReactNode;
-  params: { locale: string };
+  locale: string;
 }) {
   return (
     <I18nProviderClient locale={locale}>
