@@ -1,12 +1,13 @@
-
 "use client";
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useCurrentLocale } from '@/i18n/client';
 
 const Step5: React.FC = () => {
+  const locale = useCurrentLocale();
   return (
     <div className="flex flex-col items-center justify-center text-center p-8 border rounded-lg shadow-lg bg-card">
       <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
@@ -16,10 +17,10 @@ const Step5: React.FC = () => {
       </p>
       <div className="flex gap-4">
         <Button asChild>
-          <Link href="/dashboard">Return to Dashboard</Link>
+          <Link href={`/${locale}/dashboard`}>Return to Dashboard</Link>
         </Button>
         <Button variant="outline" asChild>
-           <Link href="/reports">View Final Reports</Link>
+           <Link href={`/${locale}/reports`}>View Final Reports</Link>
         </Button>
       </div>
     </div>

@@ -79,7 +79,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const locale = useCurrentLocale();
 
   return (
-    <div dir={locale === 'ur' ? 'rtl' : 'ltr'}>
       <SidebarProvider defaultOpen>
         <Sidebar collapsible="icon" variant="sidebar" side={locale === 'ur' ? 'right' : 'left'}>
           <SidebarHeader className="h-16 flex items-center justify-between p-4">
@@ -172,6 +171,5 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </main>
         </SidebarInset>
       </SidebarProvider>
-    </div>
   );
 }
