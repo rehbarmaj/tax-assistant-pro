@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { useI18n, useCurrentLocale } from '@/i18n/client';
+import { useI18n, useCurrentLocale, I18nProviderClient } from '@/i18n/client';
 import {
   SidebarProvider,
   Sidebar,
@@ -41,8 +41,9 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { Toaster } from "@/components/ui/toaster";
 
 
 const navItems = [
@@ -74,7 +75,27 @@ const navItems = [
   },
 ];
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default function AppLayout({
+  children,
+  params: { locale },
+}: {
+  children: ReactNode;
+  params: { locale: string };
+}) {
+  return (
+    <I18nProviderClient locale={locale}>
+      <TooltipProvider>
+        <AppLayoutContent>
+            {children}
+        </AppLayoutContent>
+        <Toaster />
+      </TooltipProvider>
+    </I18nProviderClient>
+  );
+}
+
+
+function AppLayoutContent({ children }: { children: ReactNode }) {
   const t = useI18n();
   const locale = useCurrentLocale();
 
