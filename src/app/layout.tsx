@@ -6,8 +6,10 @@ export default function RootLayout({
 }: {
   children: ReactNode;
 }) {
+  // This is the root layout. It's recommended to keep it minimal.
+  // The main app layout with sidebar etc. is in [locale]/layout.tsx
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
