@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { I18nProviderClient } from '@/i18n/client';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from "@/components/ui/toaster";
 
 
 export default function LocaleLayout({
@@ -14,6 +15,7 @@ export default function LocaleLayout({
     <I18nProviderClient locale={locale}>
       <TooltipProvider>
         {children}
+        <Toaster />
       </TooltipProvider>
     </I18nProviderClient>
   );
