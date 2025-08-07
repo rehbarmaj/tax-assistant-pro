@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import './globals.css';
+import '../globals.css';
 
-// This is the root layout. It now serves as the minimal layout for the setup wizard.
-export default function RootLayout({
+// This is the root layout for the setup wizard.
+export default function SetupLayout({
   children,
 }: Readonly<{
   children: ReactNode;
