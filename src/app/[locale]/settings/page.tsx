@@ -47,7 +47,7 @@ const SettingsPage: NextPage = () => {
     setAdminInfo({ ...adminInfo, [e.target.name]: e.target.value });
   };
 
-  const handleSaveChanges = (section: string) => {
+  const handleSaveChanges = (section: 'company' | 'admin') => {
     // In a real app, you would save this data to a backend.
     console.log(`Saving ${section}:`, section === 'company' ? companyInfo : adminInfo);
     toast({
