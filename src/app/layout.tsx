@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import '../globals.css';
+import './globals.css';
+import { Toaster } from "@/components/ui/toaster";
 
-// This is the root layout for the setup wizard.
-export default function SetupLayout({
+// This is now the single root layout for the entire application.
+export default function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
@@ -16,6 +17,7 @@ export default function SetupLayout({
       </head>
       <body className="font-body antialiased">
         {children}
+        <Toaster />
       </body>
     </html>
   );
