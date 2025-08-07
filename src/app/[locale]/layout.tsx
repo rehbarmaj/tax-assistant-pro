@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import AppLayout from './app-layout';
+import AppLayoutClient from './app-layout-client';
 
 export default function AppLocaleLayout({
   children,
@@ -8,5 +8,5 @@ export default function AppLocaleLayout({
   children: ReactNode;
   params: { locale: string };
 }) {
-  return <AppLayout locale={locale}>{children}</AppLayout>;
+  return <AppLayoutClient locale={locale}>{children}</AppLayoutClient>;
 }

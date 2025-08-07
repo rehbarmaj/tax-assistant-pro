@@ -26,6 +26,8 @@ interface AdminInfo {
 
 const SettingsPage: NextPage = () => {
   const t = useI18n();
+  const { toast } = useToast();
+
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
     name: 'Tax Assistant Pro Inc.',
     ntn: '1234567-8',
