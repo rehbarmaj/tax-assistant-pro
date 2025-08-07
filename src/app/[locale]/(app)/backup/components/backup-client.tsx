@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Download, Upload, Loader2, AlertCircle, DatabaseBackup } from 'lucide-react';
-import { getBackupData } from '@/app/(app)/backup/actions';
+import { getBackupData } from '../actions';
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from '@/i18n/client';
 

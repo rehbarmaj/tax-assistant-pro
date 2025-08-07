@@ -81,7 +81,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div dir={locale === 'ur' ? 'rtl' : 'ltr'}>
       <SidebarProvider defaultOpen>
-        <Sidebar collapsible="icon" variant="sidebar" side="left">
+        <Sidebar collapsible="icon" variant="sidebar" side={locale === 'ur' ? 'right' : 'left'}>
           <SidebarHeader className="h-16 flex items-center justify-between p-4">
             <Link href="/dashboard" className="flex items-center gap-2" aria-label="Tax Assistant Pro Home">
               <Logo />
@@ -100,7 +100,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                           <span>{t(item.labelKey as any)}</span>
                         </SidebarMenuButton>
                       </TooltipTrigger>
-                      <TooltipContent side="right" align="center">
+                      <TooltipContent side={locale === 'ur' ? 'left' : 'right'} align="center">
                         {t(item.labelKey as any)}
                       </TooltipContent>
                     </Tooltip>
@@ -121,7 +121,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                                   <span>{t(subItem.labelKey as any)}</span>
                                 </SidebarMenuButton>
                               </TooltipTrigger>
-                              <TooltipContent side="right" align="center">
+                              <TooltipContent side={locale === 'ur' ? 'left' : 'right'} align="center">
                                 {t(subItem.labelKey as any)}
                               </TooltipContent>
                             </Tooltip>

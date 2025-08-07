@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2, Wand2 } from 'lucide-react';
-import { estimateTaxAction } from '@/app/(app)/income-tax-estimator/actions';
+import { estimateTaxAction } from './actions';
 import type { EstimatedTaxResult } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from '@/i18n/client';
