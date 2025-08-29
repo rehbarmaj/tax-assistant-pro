@@ -100,4 +100,21 @@
   .group\/sidebar-wrapper {
     display: none !important;
   }
+  
+  .printing-content {
+    display: block !important;
+  }
+
+  .printing-content * {
+    visibility: visible;
+  }
+
+  body > *:not(.printing-content) {
+    display: none;
+  }
+
+  @page {
+    size: auto;
+    margin: 0.5in;
+  }
 }

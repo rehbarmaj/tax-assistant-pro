@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -9,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PlusCircle, Search, Pencil, Trash2, CalendarIcon } from 'lucide-react';
 import type { ReceiptVoucher } from '@/lib/types';
 import { initialReceiptVouchers, initialLedgerAccounts } from '@/lib/mock-data';
@@ -23,6 +25,7 @@ import SearchableAccountDropdown from '@/components/ui/searchable-account-dropdo
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { PrintButton } from '@/components/ui/print-button';
+import { PrintableVoucher } from '@/components/ui/printable-voucher';
 
 const voucherSchema = z.object({
   id: z.string().optional(),
@@ -40,6 +43,8 @@ const ReceiptVouchersPage: NextPage = () => {
   const [vouchers, setVouchers] = useState<ReceiptVoucher[]>(initialReceiptVouchers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<ReceiptVoucher | null>(null);
+  const [isPrintConfirmOpen, setIsPrintConfirmOpen] = useState(false);
+  const [voucherToPrint, setVoucherToPrint] = useState<ReceiptVoucher | null>(null);
   const { toast } = useToast();
 
   const debtors = initialLedgerAccounts.filter(acc => acc.controlAccountId === '1.01.1');
@@ -75,12 +80,14 @@ const ReceiptVouchersPage: NextPage = () => {
     const party = debtors.find(p => p.id === data.partyId);
     if (!party) return;
 
+    let savedVoucher: ReceiptVoucher;
+
     if (editingVoucher) {
-       const updatedVoucher = { ...editingVoucher, ...data, partyName: party.name };
-       setVouchers(prev => prev.map(v => v.id === editingVoucher.id ? updatedVoucher : v));
+       savedVoucher = { ...editingVoucher, ...data, partyName: party.name };
+       setVouchers(prev => prev.map(v => v.id === editingVoucher.id ? savedVoucher : v));
        toast({ title: "Success", description: "Receipt voucher updated successfully." });
     } else {
-      const newVoucher: ReceiptVoucher = {
+      savedVoucher = {
         id: `rv_${Date.now()}`,
         voucherNumber: `RV${(vouchers.length + 1).toString().padStart(3, '0')}`,
         date: data.date,
@@ -91,12 +98,14 @@ const ReceiptVouchersPage: NextPage = () => {
         currency: 'USD',
       };
 
-      setVouchers(prev => [newVoucher, ...prev]);
+      setVouchers(prev => [savedVoucher, ...prev]);
       toast({ title: "Success", description: "Receipt voucher created successfully." });
     }
 
     setIsDialogOpen(false);
     setEditingVoucher(null);
+    setVoucherToPrint(savedVoucher);
+    setIsPrintConfirmOpen(true);
   };
   
   const handleAddNew = () => {
@@ -108,6 +117,14 @@ const ReceiptVouchersPage: NextPage = () => {
     setEditingVoucher(voucher);
     setIsDialogOpen(true);
   };
+  
+  const handlePrint = () => {
+    if (voucherToPrint) {
+      setTimeout(() => window.print(), 100);
+    }
+    setIsPrintConfirmOpen(false);
+    setVoucherToPrint(null);
+  };
 
   const filteredVouchers = vouchers.filter(
     (voucher) =>
@@ -117,6 +134,11 @@ const ReceiptVouchersPage: NextPage = () => {
 
   return (
     <div className="container mx-auto">
+      {voucherToPrint && (
+        <div className="printing-content">
+          <PrintableVoucher voucher={voucherToPrint} />
+        </div>
+      )}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Receipt Vouchers</h1>
@@ -295,6 +317,20 @@ const ReceiptVouchersPage: NextPage = () => {
           </Table>
         </div>
       </div>
+      <AlertDialog open={isPrintConfirmOpen} onOpenChange={setIsPrintConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Voucher Saved</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voucher has been saved successfully. Would you like to print it now?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setVoucherToPrint(null)}>No</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePrint}>Yes, Print</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

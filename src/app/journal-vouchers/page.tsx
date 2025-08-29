@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,7 +9,8 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -23,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { PrintButton } from '@/components/ui/print-button';
+import { PrintableVoucher } from '@/components/ui/printable-voucher';
 
 const journalEntrySchema = z.object({
   id: z.string().optional(),
@@ -53,6 +56,8 @@ const JournalVouchersPage: NextPage = () => {
   const [vouchers, setVouchers] = useState<JournalVoucher[]>(initialJournalVouchers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<JournalVoucher | null>(null);
+  const [isPrintConfirmOpen, setIsPrintConfirmOpen] = useState(false);
+  const [voucherToPrint, setVoucherToPrint] = useState<JournalVoucher | null>(null);
   const { toast } = useToast();
 
   const form = useForm<VoucherFormValues>({
@@ -63,7 +68,7 @@ const JournalVouchersPage: NextPage = () => {
     },
   });
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "entries",
   });
@@ -109,22 +114,26 @@ const JournalVouchersPage: NextPage = () => {
         }))
     };
 
+    let savedVoucher: JournalVoucher;
+
     if (editingVoucher) {
-      const updatedVoucher = { ...editingVoucher, ...voucherData };
-      setVouchers(prev => prev.map(v => v.id === editingVoucher.id ? updatedVoucher : v));
+      savedVoucher = { ...editingVoucher, ...voucherData };
+      setVouchers(prev => prev.map(v => v.id === editingVoucher.id ? savedVoucher : v));
       toast({ title: "Success", description: "Journal voucher updated successfully." });
     } else {
-      const newVoucher: JournalVoucher = {
+      savedVoucher = {
         id: `jv_${Date.now()}`,
         voucherNumber: `JV${(vouchers.length + 1).toString().padStart(3, '0')}`,
         ...voucherData
       };
-      setVouchers(prev => [newVoucher, ...prev]);
+      setVouchers(prev => [savedVoucher, ...prev]);
       toast({ title: "Success", description: "Journal voucher created successfully." });
     }
     
     setIsDialogOpen(false);
     setEditingVoucher(null);
+    setVoucherToPrint(savedVoucher);
+    setIsPrintConfirmOpen(true);
   };
   
   const handleAddNew = () => {
@@ -137,6 +146,14 @@ const JournalVouchersPage: NextPage = () => {
     setIsDialogOpen(true);
   };
   
+  const handlePrint = () => {
+    if (voucherToPrint) {
+      setTimeout(() => window.print(), 100);
+    }
+    setIsPrintConfirmOpen(false);
+    setVoucherToPrint(null);
+  };
+
   const getVoucherTotal = (entries: JournalEntry[]) => {
     return entries.reduce((sum, entry) => sum + entry.debit, 0);
   };
@@ -149,6 +166,11 @@ const JournalVouchersPage: NextPage = () => {
 
   return (
     <div className="container mx-auto">
+      {voucherToPrint && (
+        <div className="printing-content">
+          <PrintableVoucher voucher={voucherToPrint} />
+        </div>
+      )}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Journal Vouchers</h1>
@@ -354,8 +376,23 @@ const JournalVouchersPage: NextPage = () => {
           </Table>
         </div>
       </div>
+       <AlertDialog open={isPrintConfirmOpen} onOpenChange={setIsPrintConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Voucher Saved</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voucher has been saved successfully. Would you like to print it now?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setVoucherToPrint(null)}>No</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePrint}>Yes, Print</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
 export default JournalVouchersPage;
+```
