@@ -35,12 +35,12 @@ const LoginPage: NextPage = () => {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+    <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-2xl">
           <CardHeader className="text-center">
-            <div className="flex justify-center items-center gap-2 mb-2">
-              <Logo />
+            <div className="mx-auto mb-4">
+                <Logo />
             </div>
             <CardTitle className="text-2xl font-bold">Tax Assistant Pro</CardTitle>
             <CardDescription>

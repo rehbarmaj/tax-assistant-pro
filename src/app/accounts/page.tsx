@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { PlusCircle, Search, FileDown, ChevronsUpDown, Pencil, Trash2 } from 'lucide-react';
-import type { ControlGroup, SubControlGroup, ControlAccount, LedgerAccount, ChartOfAccount } from '@/lib/types';
+import type { ChartOfAccount, LedgerAccount } from '@/lib/types';
 import {
   initialControlGroups,
   initialSubControlGroups,
@@ -45,8 +45,8 @@ const AccountsPage: React.FC = () => {
   );
 
   const renderAccountRow = (account: ChartOfAccount) => (
-    <TableRow key={account.id} style={{ paddingLeft: `${(account.level - 1) * 2}rem` }} className={account.level === 1 ? 'bg-secondary/50 font-bold' : ''}>
-      <TableCell className={`pl-${(account.level - 1) * 4 + 4}`}>
+    <TableRow key={account.id} className={account.level === 1 ? 'bg-secondary/50 font-bold' : ''}>
+      <TableCell style={{ paddingLeft: `${(account.level - 1) * 1.5 + 1}rem` }}>
         {account.code}
       </TableCell>
       <TableCell>{account.name}</TableCell>
