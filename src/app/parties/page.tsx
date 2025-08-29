@@ -3,6 +3,9 @@
 
 import { useState } from 'react';
 import type { NextPage } from 'next';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,9 +16,12 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, Search, FileDown, ChevronsUpDown, Pencil, Trash2 } from 'lucide-react';
-import { initialLedgerAccounts } from '@/lib/mock-data';
+import { initialLedgerAccounts, initialControlAccounts } from '@/lib/mock-data';
 import type { LedgerAccount } from '@/lib/types';
 import {
   DropdownMenu,
@@ -23,11 +29,70 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
+
+const partySchema = z.object({
+  name: z.string().min(1, 'Party name is required.'),
+  type: z.enum(['1.01.1', '2.01.1'], { required_error: 'Party type is required.' }), // Debtors or Creditors
+  ntn: z.string().optional(),
+  strn: z.string().optional(),
+  contactPerson: z.string().optional(),
+  contactNumber: z.string().optional(),
+});
+
+type PartyFormValues = z.infer<typeof partySchema>;
 
 const PartiesPage: NextPage = () => {
-  // We only show accounts that are parties (Debtors or Creditors)
   const [parties, setParties] = useState<LedgerAccount[]>(initialLedgerAccounts.filter(acc => acc.controlAccountId === '1.01.1' || acc.controlAccountId === '2.01.1'));
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const form = useForm<PartyFormValues>({
+    resolver: zodResolver(partySchema),
+    defaultValues: {
+      name: '',
+      ntn: '',
+      strn: '',
+      contactPerson: '',
+      contactNumber: '',
+    },
+  });
+  
+  const onSubmit = (data: PartyFormValues) => {
+    const parentAccount = initialControlAccounts.find(acc => acc.id === data.type);
+    if (!parentAccount) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Invalid party type.' });
+      return;
+    }
+
+    const maxCode = parties
+        .filter(p => p.controlAccountId === data.type)
+        .map(p => parseInt(p.code.split('.').pop() || '0'))
+        .reduce((max, num) => Math.max(max, num), 0);
+
+    const newCode = `${data.type}.${(maxCode + 1).toString().padStart(3, '0')}`;
+    
+    const newParty: LedgerAccount = {
+        id: `L${Math.random().toString(36).substr(2, 9)}`,
+        code: newCode,
+        name: data.name,
+        controlAccountId: data.type,
+        balance: 0,
+        canPost: true,
+        level: 4,
+        currency: 'USD',
+        ntn: data.ntn,
+        strn: data.strn,
+        contactPerson: data.contactPerson,
+        contactNumber: data.contactNumber,
+    };
+
+    setParties(prev => [...prev, newParty]);
+    toast({ title: 'Success', description: 'New party has been added.' });
+    form.reset();
+    setIsDialogOpen(false);
+  };
 
   const filteredParties = parties.filter(
     (party) =>
@@ -41,7 +106,7 @@ const PartiesPage: NextPage = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Clients & Vendors</h1>
-                 <Dialog>
+                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                     <Button>
                         <PlusCircle className="mr-2" /> Add Party
@@ -51,11 +116,96 @@ const PartiesPage: NextPage = () => {
                     <DialogHeader>
                         <DialogTitle>Add New Client or Vendor</DialogTitle>
                     </DialogHeader>
-                    {/* Add party form here */}
-                    <DialogFooter>
-                        <Button variant="outline">Cancel</Button>
-                        <Button>Save</Button>
-                    </DialogFooter>
+                     <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                             <FormField
+                              control={form.control}
+                              name="name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Party Name</FormLabel>
+                                  <FormControl><Input placeholder="e.g., Global Corp" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                             <FormField
+                              control={form.control}
+                              name="type"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Party Type</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select a type" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="1.01.1">Client (Debtor)</SelectItem>
+                                      <SelectItem value="2.01.1">Vendor (Creditor)</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                             <FormField
+                              control={form.control}
+                              name="ntn"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>NTN</FormLabel>
+                                  <FormControl><Input placeholder="National Tax Number" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                             <FormField
+                              control={form.control}
+                              name="strn"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>STRN</FormLabel>
+                                  <FormControl><Input placeholder="Sales Tax Registration Number" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                           <div className="grid grid-cols-2 gap-4">
+                             <FormField
+                              control={form.control}
+                              name="contactPerson"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Contact Person</FormLabel>
+                                  <FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                             <FormField
+                              control={form.control}
+                              name="contactNumber"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Contact Number</FormLabel>
+                                  <FormControl><Input placeholder="e.g., 555-1234" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <DialogFooter>
+                              <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                              <Button type="submit">Save Party</Button>
+                          </DialogFooter>
+                        </form>
+                      </Form>
                     </DialogContent>
                 </Dialog>
             </div>
