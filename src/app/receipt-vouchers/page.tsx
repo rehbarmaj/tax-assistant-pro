@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,8 +22,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import SearchableAccountDropdown from '@/components/ui/searchable-account-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { PrintButton } from '@/components/ui/print-button';
 
 const voucherSchema = z.object({
+  id: z.string().optional(),
   date: z.date({ required_error: "A date is required." }),
   partyId: z.string().min(1, "Please select a party."),
   receiptMode: z.string().min(1, "Please select a receipt mode."),
@@ -38,6 +39,7 @@ const ReceiptVouchersPage: NextPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [vouchers, setVouchers] = useState<ReceiptVoucher[]>(initialReceiptVouchers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingVoucher, setEditingVoucher] = useState<ReceiptVoucher | null>(null);
   const { toast } = useToast();
 
   const debtors = initialLedgerAccounts.filter(acc => acc.controlAccountId === '1.01.1');
@@ -50,25 +52,61 @@ const ReceiptVouchersPage: NextPage = () => {
     },
   });
 
+  useEffect(() => {
+    if (editingVoucher) {
+      const party = debtors.find(p => p.name === editingVoucher.partyName);
+      form.reset({
+        ...editingVoucher,
+        partyId: party?.id || '',
+      });
+    } else {
+      form.reset({
+        id: '',
+        date: new Date(),
+        partyId: '',
+        receiptMode: '',
+        amount: 0,
+        narration: '',
+      });
+    }
+  }, [editingVoucher, form, debtors]);
+
   const onSubmit = (data: VoucherFormValues) => {
     const party = debtors.find(p => p.id === data.partyId);
     if (!party) return;
 
-    const newVoucher: ReceiptVoucher = {
-      id: `rv_${Date.now()}`,
-      voucherNumber: `RV${(vouchers.length + 1).toString().padStart(3, '0')}`,
-      date: data.date,
-      partyName: party.name,
-      amount: data.amount,
-      receiptMode: data.receiptMode as any,
-      narration: data.narration,
-      currency: 'USD',
-    };
+    if (editingVoucher) {
+       const updatedVoucher = { ...editingVoucher, ...data, partyName: party.name };
+       setVouchers(prev => prev.map(v => v.id === editingVoucher.id ? updatedVoucher : v));
+       toast({ title: "Success", description: "Receipt voucher updated successfully." });
+    } else {
+      const newVoucher: ReceiptVoucher = {
+        id: `rv_${Date.now()}`,
+        voucherNumber: `RV${(vouchers.length + 1).toString().padStart(3, '0')}`,
+        date: data.date,
+        partyName: party.name,
+        amount: data.amount,
+        receiptMode: data.receiptMode as any,
+        narration: data.narration,
+        currency: 'USD',
+      };
 
-    setVouchers(prev => [newVoucher, ...prev]);
-    toast({ title: "Success", description: "Receipt voucher created successfully." });
-    form.reset();
+      setVouchers(prev => [newVoucher, ...prev]);
+      toast({ title: "Success", description: "Receipt voucher created successfully." });
+    }
+
     setIsDialogOpen(false);
+    setEditingVoucher(null);
+  };
+  
+  const handleAddNew = () => {
+    setEditingVoucher(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (voucher: ReceiptVoucher) => {
+    setEditingVoucher(voucher);
+    setIsDialogOpen(true);
   };
 
   const filteredVouchers = vouchers.filter(
@@ -83,14 +121,12 @@ const ReceiptVouchersPage: NextPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Receipt Vouchers</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2" /> Add Receipt Voucher
-              </Button>
-            </DialogTrigger>
+            <Button onClick={handleAddNew}>
+              <PlusCircle className="mr-2" /> Add Receipt Voucher
+            </Button>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>New Receipt Voucher</DialogTitle>
+                <DialogTitle>{editingVoucher ? 'Edit Receipt Voucher' : 'New Receipt Voucher'}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -170,7 +206,7 @@ const ReceiptVouchersPage: NextPage = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Receipt Mode</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a mode" />
@@ -222,9 +258,10 @@ const ReceiptVouchersPage: NextPage = () => {
               className="pl-10"
             />
           </div>
+          <PrintButton />
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div id="print-content" className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -233,7 +270,7 @@ const ReceiptVouchersPage: NextPage = () => {
                 <TableHead>Party Name</TableHead>
                 <TableHead>Receipt Mode</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right print-hidden">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -244,8 +281,8 @@ const ReceiptVouchersPage: NextPage = () => {
                   <TableCell>{voucher.partyName}</TableCell>
                   <TableCell>{voucher.receiptMode}</TableCell>
                   <TableCell className="text-right">{formatCurrency(voucher.amount, voucher.currency)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
+                  <TableCell className="text-right print-hidden">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(voucher)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="text-destructive">

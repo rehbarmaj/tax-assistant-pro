@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,9 +22,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import SearchableAccountDropdown from '@/components/ui/searchable-account-dropdown';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { PrintButton } from '@/components/ui/print-button';
 
 
 const voucherSchema = z.object({
+  id: z.string().optional(),
   date: z.date({ required_error: "A date is required." }),
   partyId: z.string().min(1, "Please select a party."),
   paymentMode: z.string().min(1, "Please select a payment mode."),
@@ -39,6 +40,7 @@ const PaymentVouchersPage: NextPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [vouchers, setVouchers] = useState<PaymentVoucher[]>(initialPaymentVouchers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingVoucher, setEditingVoucher] = useState<PaymentVoucher | null>(null);
   const { toast } = useToast();
 
   const creditors = initialLedgerAccounts.filter(acc => acc.controlAccountId === '2.01.1');
@@ -51,25 +53,62 @@ const PaymentVouchersPage: NextPage = () => {
     },
   });
   
+  useEffect(() => {
+    if (editingVoucher) {
+      const party = creditors.find(p => p.name === editingVoucher.partyName);
+      form.reset({
+        ...editingVoucher,
+        partyId: party?.id || '',
+      });
+    } else {
+      form.reset({
+        id: '',
+        date: new Date(),
+        partyId: '',
+        paymentMode: '',
+        amount: 0,
+        narration: '',
+      });
+    }
+  }, [editingVoucher, form, creditors]);
+
   const onSubmit = (data: VoucherFormValues) => {
     const party = creditors.find(p => p.id === data.partyId);
     if (!party) return;
 
-    const newVoucher: PaymentVoucher = {
-      id: `pv_${Date.now()}`,
-      voucherNumber: `PV${(vouchers.length + 1).toString().padStart(3, '0')}`,
-      date: data.date,
-      partyName: party.name,
-      amount: data.amount,
-      paymentMode: data.paymentMode as any,
-      narration: data.narration,
-      currency: 'USD',
-    };
-
-    setVouchers(prev => [newVoucher, ...prev]);
-    toast({ title: "Success", description: "Payment voucher created successfully." });
-    form.reset();
+    if (editingVoucher) {
+      // Update existing voucher
+      const updatedVoucher = { ...editingVoucher, ...data, partyName: party.name };
+      setVouchers(prev => prev.map(v => v.id === editingVoucher.id ? updatedVoucher : v));
+      toast({ title: "Success", description: "Payment voucher updated successfully." });
+    } else {
+      // Add new voucher
+      const newVoucher: PaymentVoucher = {
+        id: `pv_${Date.now()}`,
+        voucherNumber: `PV${(vouchers.length + 1).toString().padStart(3, '0')}`,
+        date: data.date,
+        partyName: party.name,
+        amount: data.amount,
+        paymentMode: data.paymentMode as any,
+        narration: data.narration,
+        currency: 'USD',
+      };
+      setVouchers(prev => [newVoucher, ...prev]);
+      toast({ title: "Success", description: "Payment voucher created successfully." });
+    }
+    
     setIsDialogOpen(false);
+    setEditingVoucher(null);
+  };
+  
+  const handleAddNew = () => {
+    setEditingVoucher(null);
+    setIsDialogOpen(true);
+  };
+  
+  const handleEdit = (voucher: PaymentVoucher) => {
+    setEditingVoucher(voucher);
+    setIsDialogOpen(true);
   };
 
   const filteredVouchers = vouchers.filter(
@@ -84,14 +123,12 @@ const PaymentVouchersPage: NextPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Payment Vouchers</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2" /> Add Payment Voucher
-              </Button>
-            </DialogTrigger>
+            <Button onClick={handleAddNew}>
+              <PlusCircle className="mr-2" /> Add Payment Voucher
+            </Button>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>New Payment Voucher</DialogTitle>
+                <DialogTitle>{editingVoucher ? 'Edit Payment Voucher' : 'New Payment Voucher'}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -171,7 +208,7 @@ const PaymentVouchersPage: NextPage = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Payment Mode</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a mode" />
@@ -223,9 +260,10 @@ const PaymentVouchersPage: NextPage = () => {
               className="pl-10"
             />
           </div>
+          <PrintButton />
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div id="print-content" className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -234,7 +272,7 @@ const PaymentVouchersPage: NextPage = () => {
                 <TableHead>Party Name</TableHead>
                 <TableHead>Payment Mode</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right print-hidden">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -245,8 +283,8 @@ const PaymentVouchersPage: NextPage = () => {
                   <TableCell>{voucher.partyName}</TableCell>
                   <TableCell>{voucher.paymentMode}</TableCell>
                   <TableCell className="text-right">{formatCurrency(voucher.amount, voucher.currency)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
+                  <TableCell className="text-right print-hidden">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(voucher)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="text-destructive">

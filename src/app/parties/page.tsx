@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,10 +29,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { PrintButton } from '@/components/ui/print-button';
 
 const partySchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1, 'Party name is required.'),
-  type: z.enum(['1.01.1', '2.01.1'], { required_error: 'Party type is required.' }), // Debtors or Creditors
+  controlAccountId: z.enum(['1.01.1', '2.01.1'], { required_error: 'Party type is required.' }), // Debtors or Creditors
   ntn: z.string().optional(),
   strn: z.string().optional(),
   contactPerson: z.string().optional(),
@@ -46,6 +47,7 @@ const PartiesPage: NextPage = () => {
   const [parties, setParties] = useState<LedgerAccount[]>(initialLedgerAccounts.filter(acc => acc.controlAccountId === '1.01.1' || acc.controlAccountId === '2.01.1'));
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingParty, setEditingParty] = useState<LedgerAccount | null>(null);
   const { toast } = useToast();
 
   const form = useForm<PartyFormValues>({
@@ -59,40 +61,75 @@ const PartiesPage: NextPage = () => {
     },
   });
   
-  const onSubmit = (data: PartyFormValues) => {
-    const parentAccount = initialControlAccounts.find(acc => acc.id === data.type);
-    if (!parentAccount) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Invalid party type.' });
-      return;
+  useEffect(() => {
+    if (editingParty) {
+      form.reset(editingParty);
+    } else {
+      form.reset({
+        id: '',
+        name: '',
+        ntn: '',
+        strn: '',
+        contactPerson: '',
+        contactNumber: '',
+        controlAccountId: undefined,
+      });
     }
+  }, [editingParty, form]);
 
-    const maxCode = parties
-        .filter(p => p.controlAccountId === data.type)
-        .map(p => parseInt(p.code.split('.').pop() || '0'))
-        .reduce((max, num) => Math.max(max, num), 0);
+  const onSubmit = (data: PartyFormValues) => {
+    if (editingParty) {
+      // Update existing party
+      const updatedParty = { ...editingParty, ...data };
+      setParties(prev => prev.map(p => p.id === editingParty.id ? updatedParty : p));
+      toast({ title: 'Success', description: 'Party has been updated.' });
+    } else {
+      // Add new party
+      const parentAccount = initialControlAccounts.find(acc => acc.id === data.controlAccountId);
+      if (!parentAccount) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Invalid party type.' });
+        return;
+      }
 
-    const newCode = `${data.type}.${(maxCode + 1).toString().padStart(3, '0')}`;
+      const maxCode = parties
+          .filter(p => p.controlAccountId === data.controlAccountId)
+          .map(p => parseInt(p.code.split('.').pop() || '0'))
+          .reduce((max, num) => Math.max(max, num), 0);
+
+      const newCode = `${data.controlAccountId}.${(maxCode + 1).toString().padStart(3, '0')}`;
+      
+      const newParty: LedgerAccount = {
+          id: `L${Math.random().toString(36).substr(2, 9)}`,
+          code: newCode,
+          name: data.name,
+          controlAccountId: data.controlAccountId,
+          balance: 0,
+          canPost: true,
+          level: 4,
+          currency: 'USD',
+          ntn: data.ntn,
+          strn: data.strn,
+          contactPerson: data.contactPerson,
+          contactNumber: data.contactNumber,
+      };
+
+      setParties(prev => [...prev, newParty]);
+      toast({ title: 'Success', description: 'New party has been added.' });
+    }
     
-    const newParty: LedgerAccount = {
-        id: `L${Math.random().toString(36).substr(2, 9)}`,
-        code: newCode,
-        name: data.name,
-        controlAccountId: data.type,
-        balance: 0,
-        canPost: true,
-        level: 4,
-        currency: 'USD',
-        ntn: data.ntn,
-        strn: data.strn,
-        contactPerson: data.contactPerson,
-        contactNumber: data.contactNumber,
-    };
-
-    setParties(prev => [...prev, newParty]);
-    toast({ title: 'Success', description: 'New party has been added.' });
-    form.reset();
     setIsDialogOpen(false);
+    setEditingParty(null);
   };
+  
+  const handleAddNew = () => {
+    setEditingParty(null);
+    setIsDialogOpen(true);
+  }
+  
+  const handleEdit = (party: LedgerAccount) => {
+    setEditingParty(party);
+    setIsDialogOpen(true);
+  }
 
   const filteredParties = parties.filter(
     (party) =>
@@ -107,14 +144,12 @@ const PartiesPage: NextPage = () => {
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Clients & Vendors</h1>
                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                    <Button>
+                    <Button onClick={handleAddNew}>
                         <PlusCircle className="mr-2" /> Add Party
                     </Button>
-                    </DialogTrigger>
                     <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>Add New Client or Vendor</DialogTitle>
+                        <DialogTitle>{editingParty ? 'Edit Party' : 'Add New Client or Vendor'}</DialogTitle>
                     </DialogHeader>
                      <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -132,11 +167,11 @@ const PartiesPage: NextPage = () => {
                             />
                              <FormField
                               control={form.control}
-                              name="type"
+                              name="controlAccountId"
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Party Type</FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                       <SelectTrigger>
                                         <SelectValue placeholder="Select a type" />
@@ -220,21 +255,24 @@ const PartiesPage: NextPage = () => {
                     className="pl-10"
                 />
                 </div>
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline">
-                        <FileDown className="mr-2" /> Export
-                        <ChevronsUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem>Export as CSV</DropdownMenuItem>
-                        <DropdownMenuItem>Export as PDF</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center gap-2">
+                    <PrintButton />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                            <FileDown className="mr-2" /> Export
+                            <ChevronsUpDown className="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem>Export as CSV</DropdownMenuItem>
+                            <DropdownMenuItem>Export as PDF</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
-            <div className="border rounded-lg overflow-hidden">
+            <div id="print-content" className="border rounded-lg overflow-hidden">
                 <Table>
                 <TableHeader>
                     <TableRow>
@@ -243,7 +281,7 @@ const PartiesPage: NextPage = () => {
                     <TableHead>STRN</TableHead>
                     <TableHead>Contact Person</TableHead>
                     <TableHead>Contact Number</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right print-hidden">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -254,8 +292,8 @@ const PartiesPage: NextPage = () => {
                         <TableCell>{party.strn || 'N/A'}</TableCell>
                         <TableCell>{party.contactPerson || 'N/A'}</TableCell>
                         <TableCell>{party.contactNumber || 'N/A'}</TableCell>
-                        <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
+                        <TableCell className="text-right print-hidden">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(party)}>
                             <Pencil className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="text-destructive">

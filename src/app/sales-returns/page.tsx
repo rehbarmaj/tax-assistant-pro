@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -12,6 +11,7 @@ import type { SaleReturnNote } from '@/lib/types';
 import { initialSaleReturnNotes } from '@/lib/mock-data';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/currency';
+import { PrintButton } from '@/components/ui/print-button';
 
 const SalesReturnsPage: NextPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,10 +57,10 @@ const SalesReturnsPage: NextPage = () => {
               className="pl-10"
             />
           </div>
-          {/* Export Dropdown can be added here */}
+          <PrintButton />
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div id="print-content" className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -69,7 +69,7 @@ const SalesReturnsPage: NextPage = () => {
                 <TableHead>Customer</TableHead>
                 <TableHead>Original Note #</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right print-hidden">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,8 +80,8 @@ const SalesReturnsPage: NextPage = () => {
                   <TableCell>{note.customerName}</TableCell>
                   <TableCell>{note.originalSaleNoteNumber}</TableCell>
                   <TableCell className="text-right">{formatCurrency(note.grandTotal, note.currency)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
+                  <TableCell className="text-right print-hidden">
+                    <Button variant="ghost" size="icon" disabled>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="text-destructive">

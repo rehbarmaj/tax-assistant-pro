@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,8 +29,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { PrintButton } from '@/components/ui/print-button';
 
 const productSchema = z.object({
+  id: z.string().optional(),
   code: z.string().min(1, 'Product code is required.'),
   name: z.string().min(1, 'Product name is required.'),
   hsnSac: z.string().min(1, 'HSN/SAC code is required.'),
@@ -46,6 +47,7 @@ const ProductsPage: NextPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { toast } = useToast();
   
   const form = useForm<ProductFormValues>({
@@ -60,17 +62,51 @@ const ProductsPage: NextPage = () => {
     },
   });
 
+  useEffect(() => {
+    if (editingProduct) {
+      form.reset(editingProduct);
+    } else {
+      form.reset({
+        id: '',
+        code: '',
+        name: '',
+        hsnSac: '',
+        unit: '',
+        salePrice: 0,
+        taxRateId: '',
+      });
+    }
+  }, [editingProduct, form]);
+
   const onSubmit = (data: ProductFormValues) => {
-    console.log('New Product Data:', data);
-    const newProduct: Product = {
-      id: `P${Math.random().toString(36).substr(2, 9)}`,
-      purchasePrice: 0, // Assuming default purchase price, can be adjusted
-      ...data,
-    };
-    setProducts(prev => [...prev, newProduct]);
-    toast({ title: 'Success', description: 'New product has been added.' });
-    form.reset();
+    if (editingProduct) {
+      // Update existing product
+      const updatedProduct = { ...editingProduct, ...data };
+      setProducts(prev => prev.map(p => p.id === editingProduct.id ? updatedProduct : p));
+      toast({ title: 'Success', description: 'Product has been updated.' });
+    } else {
+      // Add new product
+      const newProduct: Product = {
+        id: `P${Math.random().toString(36).substr(2, 9)}`,
+        purchasePrice: 0, // Assuming default purchase price, can be adjusted
+        ...data,
+      };
+      setProducts(prev => [...prev, newProduct]);
+      toast({ title: 'Success', description: 'New product has been added.' });
+    }
+    
     setIsDialogOpen(false);
+    setEditingProduct(null);
+  };
+  
+  const handleAddNew = () => {
+    setEditingProduct(null);
+    setIsDialogOpen(true);
+  };
+  
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setIsDialogOpen(true);
   };
   
   const getTaxRateById = (id?: string) => {
@@ -90,14 +126,12 @@ const ProductsPage: NextPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Products</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2" /> Add Product
-              </Button>
-            </DialogTrigger>
+            <Button onClick={handleAddNew}>
+              <PlusCircle className="mr-2" /> Add Product
+            </Button>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Product</DialogTitle>
+                <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
               </DialogHeader>
                <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -167,7 +201,7 @@ const ProductsPage: NextPage = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tax Rate</FormLabel>
-                           <Select onValueChange={field.onChange} defaultValue={field.value}>
+                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a tax rate" />
@@ -208,21 +242,24 @@ const ProductsPage: NextPage = () => {
               className="pl-10"
             />
           </div>
-          <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                  <FileDown className="mr-2" /> Export
-                  <ChevronsUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                  <DropdownMenuItem>Export as CSV</DropdownMenuItem>
-                  <DropdownMenuItem>Export as PDF</DropdownMenuItem>
-              </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <PrintButton />
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                    <FileDown className="mr-2" /> Export
+                    <ChevronsUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem>Export as CSV</DropdownMenuItem>
+                    <DropdownMenuItem>Export as PDF</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div id="print-content" className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -232,7 +269,7 @@ const ProductsPage: NextPage = () => {
                 <TableHead>Unit</TableHead>
                 <TableHead>Tax Rate</TableHead>
                 <TableHead className="text-right">Sale Price</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right print-hidden">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -244,8 +281,8 @@ const ProductsPage: NextPage = () => {
                   <TableCell>{product.unit}</TableCell>
                   <TableCell>{getTaxRateById(product.taxRateId)}</TableCell>
                   <TableCell className="text-right">{product.salePrice.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
+                  <TableCell className="text-right print-hidden">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="text-destructive">

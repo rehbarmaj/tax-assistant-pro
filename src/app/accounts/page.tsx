@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,9 +34,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import SearchableAccountDropdown from '@/components/ui/searchable-account-dropdown';
 import { useToast } from '@/hooks/use-toast';
+import { PrintButton } from '@/components/ui/print-button';
 
 
 const accountSchema = z.object({
+  id: z.string().optional(),
   code: z.string().min(1, 'Account code is required.'),
   name: z.string().min(1, 'Account name is required.'),
   controlAccountId: z.string().min(1, 'Parent account is required.'),
@@ -55,41 +56,73 @@ const AccountsPage: React.FC = () => {
     ...initialLedgerAccounts,
   ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<LedgerAccount | null>(null);
   const { toast } = useToast();
 
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
+      id: '',
       code: '',
       name: '',
       controlAccountId: '',
     },
   });
 
+  useEffect(() => {
+    if (editingAccount) {
+      form.reset(editingAccount);
+    } else {
+      form.reset({
+        id: '',
+        code: '',
+        name: '',
+        controlAccountId: '',
+      });
+    }
+  }, [editingAccount, form]);
+
   const onSubmit = (data: AccountFormValues) => {
-    console.log('New Account Data:', data);
-    const parentAccount = initialControlAccounts.find(acc => acc.id === data.controlAccountId);
-    if (!parentAccount) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Invalid parent account selected.' });
-        return;
+    if (editingAccount) {
+      // Update existing account
+      setAccounts(prev => prev.map(acc => acc.id === editingAccount.id ? { ...acc, ...data } : acc));
+      toast({ title: 'Success', description: 'Account has been updated.' });
+    } else {
+      // Add new account
+       const parentAccount = initialControlAccounts.find(acc => acc.id === data.controlAccountId);
+      if (!parentAccount) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Invalid parent account selected.' });
+          return;
+      }
+      
+      const newAccount: LedgerAccount = {
+          id: `L${Math.random().toString(36).substr(2, 9)}`,
+          code: data.code,
+          name: data.name,
+          controlAccountId: data.controlAccountId,
+          balance: 0,
+          canPost: true,
+          level: 4,
+          currency: 'USD'
+      };
+      
+      setAccounts(prev => [...prev, newAccount]);
+      toast({ title: 'Success', description: 'New ledger account has been added.' });
     }
     
-    const newAccount: LedgerAccount = {
-        id: `L${Math.random().toString(36).substr(2, 9)}`,
-        code: data.code,
-        name: data.name,
-        controlAccountId: data.controlAccountId,
-        balance: 0,
-        canPost: true,
-        level: 4,
-        currency: 'USD'
-    };
-    
-    setAccounts(prev => [...prev, newAccount]);
-    toast({ title: 'Success', description: 'New ledger account has been added.' });
-    form.reset();
+    setEditingAccount(null);
     setIsDialogOpen(false);
   };
+  
+  const handleEdit = (account: LedgerAccount) => {
+    setEditingAccount(account);
+    setIsDialogOpen(true);
+  }
+
+  const handleAddNew = () => {
+    setEditingAccount(null);
+    setIsDialogOpen(true);
+  }
 
 
   const filteredAccounts = accounts.filter(
@@ -114,12 +147,16 @@ const AccountsPage: React.FC = () => {
           : 'N/A'}
       </TableCell>
       <TableCell className="text-right">
-        <Button variant="ghost" size="icon">
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="text-destructive">
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {account.level === 4 && (
+          <>
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(account as LedgerAccount)}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </>
+        )}
       </TableCell>
     </TableRow>
   );
@@ -129,16 +166,13 @@ const AccountsPage: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Chart of Accounts</h1>
-            <div className="flex items-center gap-2">
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <PlusCircle className="mr-2" /> Add Account
-                  </Button>
-                </DialogTrigger>
+             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Button onClick={handleAddNew}>
+                  <PlusCircle className="mr-2" /> Add Account
+                </Button>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New Ledger Account</DialogTitle>
+                    <DialogTitle>{editingAccount ? 'Edit Ledger Account' : 'Add New Ledger Account'}</DialogTitle>
                   </DialogHeader>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -195,7 +229,6 @@ const AccountsPage: React.FC = () => {
                   </Form>
                 </DialogContent>
               </Dialog>
-            </div>
           </div>
 
           <div className="flex items-center justify-between gap-4">
@@ -208,21 +241,24 @@ const AccountsPage: React.FC = () => {
                 className="pl-10"
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <FileDown className="mr-2" /> Export
-                  <ChevronsUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Export as CSV</DropdownMenuItem>
-                <DropdownMenuItem>Export as PDF</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+                <PrintButton />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <FileDown className="mr-2" /> Export
+                      <ChevronsUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem>Export as CSV</DropdownMenuItem>
+                    <DropdownMenuItem>Export as PDF</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
           </div>
 
-          <div className="border rounded-lg overflow-hidden">
+          <div id="print-content" className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -230,7 +266,7 @@ const AccountsPage: React.FC = () => {
                   <TableHead>Account Name</TableHead>
                   <TableHead>Level</TableHead>
                   <TableHead>Balance</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right print-hidden">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

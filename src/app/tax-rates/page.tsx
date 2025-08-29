@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,8 +14,10 @@ import { PlusCircle, Search, Pencil, Trash2 } from 'lucide-react';
 import type { TaxRate } from '@/lib/types';
 import { initialTaxRates } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
+import { PrintButton } from '@/components/ui/print-button';
 
 const taxRateSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1, 'Tax rate name is required.'),
   rate: z.coerce.number().min(0, 'Rate must be a positive number.'),
 });
@@ -27,6 +28,7 @@ const TaxRatesPage: NextPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [taxRates, setTaxRates] = useState<TaxRate[]>(initialTaxRates);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTaxRate, setEditingTaxRate] = useState<TaxRate | null>(null);
   const { toast } = useToast();
 
   const form = useForm<TaxRateFormValues>({
@@ -37,15 +39,44 @@ const TaxRatesPage: NextPage = () => {
     },
   });
 
+  useEffect(() => {
+    if (editingTaxRate) {
+      form.reset(editingTaxRate);
+    } else {
+      form.reset({
+        id: '',
+        name: '',
+        rate: 0,
+      });
+    }
+  }, [editingTaxRate, form]);
+
   const onSubmit = (data: TaxRateFormValues) => {
-    const newTaxRate: TaxRate = {
-      id: `TR${Math.random().toString(36).substr(2, 9)}`,
-      ...data,
-    };
-    setTaxRates(prev => [...prev, newTaxRate]);
-    toast({ title: 'Success', description: 'New tax rate has been added.' });
-    form.reset();
+    if (editingTaxRate) {
+      const updatedRate = { ...editingTaxRate, ...data };
+      setTaxRates(prev => prev.map(r => r.id === editingTaxRate.id ? updatedRate : r));
+      toast({ title: 'Success', description: 'Tax rate has been updated.' });
+    } else {
+      const newTaxRate: TaxRate = {
+        id: `TR${Math.random().toString(36).substr(2, 9)}`,
+        ...data,
+      };
+      setTaxRates(prev => [...prev, newTaxRate]);
+      toast({ title: 'Success', description: 'New tax rate has been added.' });
+    }
+    
     setIsDialogOpen(false);
+    setEditingTaxRate(null);
+  };
+
+  const handleAddNew = () => {
+    setEditingTaxRate(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (rate: TaxRate) => {
+    setEditingTaxRate(rate);
+    setIsDialogOpen(true);
   };
 
   const filteredTaxRates = taxRates.filter(
@@ -59,14 +90,12 @@ const TaxRatesPage: NextPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Tax Rates</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2" /> Add Tax Rate
-              </Button>
-            </DialogTrigger>
+            <Button onClick={handleAddNew}>
+              <PlusCircle className="mr-2" /> Add Tax Rate
+            </Button>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>New Tax Rate</DialogTitle>
+                <DialogTitle>{editingTaxRate ? 'Edit Tax Rate' : 'New Tax Rate'}</DialogTitle>
               </DialogHeader>
                <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -101,24 +130,26 @@ const TaxRatesPage: NextPage = () => {
             </DialogContent>
           </Dialog>
         </div>
-
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="Search by Name"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex items-center justify-between">
+            <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+                placeholder="Search by Name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+            />
+            </div>
+            <PrintButton />
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div id="print-content" className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead className="text-right">Rate (%)</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right print-hidden">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,8 +157,8 @@ const TaxRatesPage: NextPage = () => {
                 <TableRow key={rate.id}>
                   <TableCell className="font-medium">{rate.name}</TableCell>
                   <TableCell className="text-right">{rate.rate.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
+                  <TableCell className="text-right print-hidden">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(rate)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="text-destructive">

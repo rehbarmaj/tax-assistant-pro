@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -23,21 +22,25 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { PrintButton } from '@/components/ui/print-button';
 
 const journalEntrySchema = z.object({
+  id: z.string().optional(),
   accountId: z.string().min(1, "Account is required."),
   debit: z.coerce.number().min(0).default(0),
   credit: z.coerce.number().min(0).default(0),
+  narration: z.string().optional(),
 });
 
 const journalVoucherSchema = z.object({
+  id: z.string().optional(),
   date: z.date({ required_error: "A date is required." }),
   narration: z.string().optional(),
   entries: z.array(journalEntrySchema).min(2, "At least two entries are required."),
 }).refine(data => {
     const totalDebit = data.entries.reduce((sum, entry) => sum + entry.debit, 0);
     const totalCredit = data.entries.reduce((sum, entry) => sum + entry.credit, 0);
-    return totalDebit === totalCredit;
+    return Math.abs(totalDebit - totalCredit) < 0.001; // Use a small tolerance for float comparison
 }, {
     message: "Total debits must equal total credits.",
     path: ["entries"],
@@ -49,6 +52,7 @@ const JournalVouchersPage: NextPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [vouchers, setVouchers] = useState<JournalVoucher[]>(initialJournalVouchers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingVoucher, setEditingVoucher] = useState<JournalVoucher | null>(null);
   const { toast } = useToast();
 
   const form = useForm<VoucherFormValues>({
@@ -59,34 +63,78 @@ const JournalVouchersPage: NextPage = () => {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: "entries",
   });
+  
+  useEffect(() => {
+    if (editingVoucher) {
+      const formValues = {
+        ...editingVoucher,
+        entries: editingVoucher.entries.map(e => ({
+          id: e.id,
+          accountId: initialLedgerAccounts.find(acc => acc.name === e.accountName)?.id || '',
+          debit: e.debit,
+          credit: e.credit,
+          narration: e.narration,
+        }))
+      };
+      form.reset(formValues);
+    } else {
+      form.reset({
+        id: '',
+        date: new Date(),
+        narration: '',
+        entries: [{ accountId: '', debit: 0, credit: 0 }, { accountId: '', debit: 0, credit: 0 }]
+      });
+    }
+  }, [editingVoucher, form]);
 
   const entries = useWatch({ control: form.control, name: 'entries' });
   const totalDebit = entries.reduce((sum, entry) => sum + (entry.debit || 0), 0);
   const totalCredit = entries.reduce((sum, entry) => sum + (entry.credit || 0), 0);
 
-
   const onSubmit = (data: VoucherFormValues) => {
-    const newVoucher: JournalVoucher = {
-        id: `jv_${Date.now()}`,
-        voucherNumber: `JV${(vouchers.length + 1).toString().padStart(3, '0')}`,
+    const voucherData = {
         date: data.date,
         narration: data.narration,
         currency: 'USD',
         entries: data.entries.map(e => ({
-            id: `je_${Math.random()}`,
+            id: e.id || `je_${Math.random()}`,
             accountName: initialLedgerAccounts.find(acc => acc.id === e.accountId)?.name || 'Unknown',
             debit: e.debit,
             credit: e.credit,
+            narration: e.narration,
         }))
     };
-    setVouchers(prev => [newVoucher, ...prev]);
-    toast({ title: "Success", description: "Journal voucher created successfully." });
-    form.reset();
+
+    if (editingVoucher) {
+      const updatedVoucher = { ...editingVoucher, ...voucherData };
+      setVouchers(prev => prev.map(v => v.id === editingVoucher.id ? updatedVoucher : v));
+      toast({ title: "Success", description: "Journal voucher updated successfully." });
+    } else {
+      const newVoucher: JournalVoucher = {
+        id: `jv_${Date.now()}`,
+        voucherNumber: `JV${(vouchers.length + 1).toString().padStart(3, '0')}`,
+        ...voucherData
+      };
+      setVouchers(prev => [newVoucher, ...prev]);
+      toast({ title: "Success", description: "Journal voucher created successfully." });
+    }
+    
     setIsDialogOpen(false);
+    setEditingVoucher(null);
+  };
+  
+  const handleAddNew = () => {
+    setEditingVoucher(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEdit = (voucher: JournalVoucher) => {
+    setEditingVoucher(voucher);
+    setIsDialogOpen(true);
   };
   
   const getVoucherTotal = (entries: JournalEntry[]) => {
@@ -104,15 +152,13 @@ const JournalVouchersPage: NextPage = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Journal Vouchers</h1>
+          <Button onClick={handleAddNew}>
+            <PlusCircle className="mr-2" /> Add Journal Voucher
+          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2" /> Add Journal Voucher
-              </Button>
-            </DialogTrigger>
             <DialogContent className="max-w-4xl">
               <DialogHeader>
-                <DialogTitle>New Journal Voucher</DialogTitle>
+                <DialogTitle>{editingVoucher ? 'Edit Journal Voucher' : 'New Journal Voucher'}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -243,7 +289,7 @@ const JournalVouchersPage: NextPage = () => {
 
                   <div className="flex justify-end gap-4 font-mono font-bold text-lg pr-12">
                       <span>{formatCurrency(totalDebit)}</span>
-                      <span className={totalDebit !== totalCredit ? 'text-destructive' : ''}>{formatCurrency(totalCredit)}</span>
+                      <span className={Math.abs(totalDebit - totalCredit) > 0.001 ? 'text-destructive' : ''}>{formatCurrency(totalCredit)}</span>
                   </div>
                   
                    {form.formState.errors.entries && (
@@ -273,9 +319,10 @@ const JournalVouchersPage: NextPage = () => {
               className="pl-10"
             />
           </div>
+          <PrintButton />
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
+        <div id="print-content" className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -283,7 +330,7 @@ const JournalVouchersPage: NextPage = () => {
                 <TableHead>Date</TableHead>
                 <TableHead>Narration</TableHead>
                 <TableHead className="text-right">Total Amount</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right print-hidden">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -293,8 +340,8 @@ const JournalVouchersPage: NextPage = () => {
                   <TableCell>{format(voucher.date, 'PPP')}</TableCell>
                   <TableCell>{voucher.narration}</TableCell>
                   <TableCell className="text-right">{formatCurrency(getVoucherTotal(voucher.entries), voucher.currency)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
+                  <TableCell className="text-right print-hidden">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(voucher)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="text-destructive">
