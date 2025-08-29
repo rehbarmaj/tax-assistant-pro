@@ -7,8 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Download, Upload, AlertTriangle, Loader2 } from 'lucide-react';
+import { Download, Upload, AlertTriangle, Loader2, Database } from 'lucide-react';
 import type { ApplicationBackup } from '@/lib/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 import {
   initialControlGroups,
   initialSubControlGroups,
@@ -25,18 +37,19 @@ import {
   initialSaleReturnNotes,
   initialUsers
 } from '@/lib/mock-data';
+import { initializeDatabase } from './actions';
 
 const BackupRestorePage: NextPage = () => {
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleCreateBackup = () => {
     setIsCreating(true);
     setError(null);
     try {
-      // In a real app, you would fetch this data from your state management or API
       const backupData: ApplicationBackup = {
         controlGroups: initialControlGroups,
         subControlGroups: initialSubControlGroups,
@@ -103,9 +116,6 @@ const BackupRestorePage: NextPage = () => {
           throw new Error("Failed to read the backup file.");
         }
         const data = JSON.parse(text);
-        // Here you would typically validate the data structure and then
-        // dispatch actions to update your application state.
-        // For this demo, we'll just log it and show a success message.
         console.log('Restored data:', data);
         toast({
           title: "Restore Successful",
@@ -125,11 +135,31 @@ const BackupRestorePage: NextPage = () => {
     reader.readAsText(file);
   };
 
+  const handleInitializeDb = async () => {
+    setIsInitializing(true);
+    setError(null);
+    const result = await initializeDatabase();
+    if (result.success) {
+      toast({
+        title: 'Database Initialized',
+        description: result.message,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Initialization Failed',
+        description: result.message,
+      });
+      setError(result.message);
+    }
+    setIsInitializing(false);
+  };
+
   return (
-    <div className="container mx-auto max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Backup & Restore</h1>
+    <div className="container mx-auto max-w-6xl">
+      <h1 className="text-3xl font-bold mb-6">Backup, Restore & Database</h1>
       
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         <Card>
           <CardHeader>
             <CardTitle>Create a Backup</CardTitle>
@@ -176,6 +206,49 @@ const BackupRestorePage: NextPage = () => {
             </Button>
           </CardContent>
         </Card>
+
+        <Card className="md:col-span-2 lg:col-span-1 border-primary/50">
+          <CardHeader>
+            <CardTitle>Initialize Database</CardTitle>
+            <CardDescription>Set up the required tables in your database for the first time.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Danger Zone</AlertTitle>
+              <AlertDescription>
+                This will attempt to create all necessary tables. Running this on a database with existing tables of the same name may cause errors or data loss.
+              </AlertDescription>
+            </Alert>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full" disabled={isInitializing}>
+                  {isInitializing ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Initializing...</>
+                  ) : (
+                    <><Database className="mr-2" /> Initialize Database</>
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action will create a new set of tables in the database configured in your environment variables. 
+                    This cannot be undone. Ensure your `.env` file is configured correctly.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleInitializeDb}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            
+          </CardContent>
+        </Card>
+
       </div>
 
        {error && (
