@@ -1,7 +1,14 @@
+
 import type { ReactNode } from 'react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
+
+export const metadata = {
+  title: 'Tax Assistant Pro',
+  description: 'Manage your taxes and inventory with ease.',
+};
+
 
 export default function RootLayout({
   children,

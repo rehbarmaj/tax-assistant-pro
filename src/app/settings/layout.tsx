@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import AppLayout from '../app-layout';
 
-export default function DashboardLayout({
+export default function SettingsLayout({
   children,
 }: {
   children: ReactNode;

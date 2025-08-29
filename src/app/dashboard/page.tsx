@@ -103,7 +103,7 @@ const DashboardPage: NextPage = () => {
             <p className="text-muted-foreground mb-4">A visual representation of sales trends.</p>
             {/* Placeholder for chart */}
             <div className="w-full h-64 bg-muted rounded-md flex items-center justify-center">
-              <Image src="https://placehold.co/600x300.png" alt="Sales Chart Placeholder" width={600} height={300} className="rounded-md" data-ai-hint="sales chart graph" />
+              <Image src="https://picsum.photos/600/300" alt="Sales Chart Placeholder" width={600} height={300} className="rounded-md" data-ai-hint="sales chart graph" />
             </div>
           </CardContent>
         </Card>
