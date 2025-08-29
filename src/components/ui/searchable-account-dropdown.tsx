@@ -19,19 +19,18 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-// Assuming this interface is defined in your project
-interface LedgerAccount {
+
+interface Account {
   id: string;
   code: string;
   name: string;
-  // Add other fields from your LedgerAccount interface as needed
 }
 
 interface SearchableAccountDropdownProps {
-  accounts: LedgerAccount[];
-  onSelect: (account: LedgerAccount | null) => void;
+  accounts: Account[];
+  onSelect: (account: Account | null) => void;
   placeholder?: string;
-  value?: LedgerAccount | null;
+  value?: Account | null;
 }
 
 const SearchableAccountDropdown: React.FC<SearchableAccountDropdownProps> = ({
@@ -41,13 +40,13 @@ const SearchableAccountDropdown: React.FC<SearchableAccountDropdownProps> = ({
   value,
 }) => {
   const [open, setOpen] = React.useState(false);
-  const [selectedAccount, setSelectedAccount] = React.useState<LedgerAccount | null>(value || null);
+  const [selectedAccount, setSelectedAccount] = React.useState<Account | null>(value || null);
 
   React.useEffect(() => {
     setSelectedAccount(value || null);
   }, [value]);
 
-  const handleSelect = (account: LedgerAccount) => {
+  const handleSelect = (account: Account) => {
     setSelectedAccount(account);
     onSelect(account);
     setOpen(false);
@@ -60,7 +59,7 @@ const SearchableAccountDropdown: React.FC<SearchableAccountDropdownProps> = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between truncate"
+          className="w-full justify-between truncate font-normal"
         >
           {selectedAccount
             ? `${selectedAccount.code} - ${selectedAccount.name}`
